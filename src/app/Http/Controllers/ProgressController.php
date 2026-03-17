@@ -32,4 +32,14 @@ class ProgressController extends Controller
 
         return view('progress.index', compact('sessions', 'stats'));
     }
+
+    public function destroy(Request $request, GameSession $session)
+    {
+        // Ensure the session belongs to the authenticated user
+        abort_unless($session->user_id === $request->user()->id, 403);
+
+        $session->delete();
+
+        return back()->with('success', 'Session removed.');
+    }
 }
