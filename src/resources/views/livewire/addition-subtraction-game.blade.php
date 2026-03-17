@@ -236,6 +236,11 @@
                                     type="number"
                                     wire:model.live="userAnswer"
                                     wire:keydown.enter="submitAndNext"
+                                    inputmode="numeric"
+                                    autocomplete="off"
+                                    autocorrect="off"
+                                    autocapitalize="off"
+                                    spellcheck="false"
                                     placeholder="?"
                                     class="w-full text-4xl sm:text-5xl font-black text-center bg-white border-2 border-indigo-300 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 text-slate-800 transition-all"
                                 >

@@ -220,6 +220,11 @@
                                     type="number"
                                     wire:model.live="userAnswer"
                                     wire:keydown.enter="submitAndNext"
+                                    inputmode="numeric"
+                                    autocomplete="off"
+                                    autocorrect="off"
+                                    autocapitalize="off"
+                                    spellcheck="false"
                                     placeholder="= ?"
                                     class="w-full text-5xl sm:text-6xl font-black text-center bg-white border-2 {{ $examMode ? 'border-amber-300 focus:border-amber-500 focus:ring-amber-100' : 'border-green-300 focus:border-green-500 focus:ring-green-100' }} rounded-xl px-4 py-3 focus:outline-none focus:ring-4 text-slate-800 transition-all"
                                 >
