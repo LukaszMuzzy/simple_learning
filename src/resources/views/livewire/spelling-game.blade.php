@@ -5,9 +5,103 @@
     @elseif($phase === 'typing' && $timePerAnswer > 0)
         wire:poll.1000ms="tick"
     @endif
+    x-on:scroll-to-top.window="window.scrollTo({ top: 0, behavior: 'smooth' })"
     class="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 py-6 px-4">
 
     <div class="max-w-2xl mx-auto">
+        @once
+        <script>
+            window.spellingBoxes = function () {
+                return {
+                    wordLen: 0,
+                    startIdx: 0,
+                    firstLetter: '',
+                    isFirstHint: false,
+                    answer: '',
+
+                    init() {
+                        this.wordLen = Number(this.$el.dataset.wordLen || 0);
+                        this.startIdx = Number(this.$el.dataset.startIdx || 0);
+                        this.firstLetter = this.$el.dataset.firstLetter || '';
+                        this.isFirstHint = this.$el.dataset.isFirstHint === 'true';
+                        this.answer = this.isFirstHint ? this.firstLetter : '';
+
+                        this.$nextTick(() => this.focusHidden());
+                    },
+
+                    focusHidden() {
+                        const input = this.$refs.hiddenInput;
+                        if (!input) return;
+
+                        input.value = this.answer;
+                        input.focus({ preventScroll: true });
+
+                        const caret = Math.min(Math.max(this.answer.length, this.startIdx), this.wordLen);
+                        input.setSelectionRange(caret, caret);
+                    },
+
+                    sanitize(value) {
+                        let clean = (value || '')
+                            .replace(/[^a-zA-Z\u00C0-\u024F']/g, '')
+                            .slice(0, this.wordLen);
+
+                        if (this.isFirstHint) {
+                            clean = this.firstLetter + clean.replaceAll(this.firstLetter, '').slice(0, Math.max(this.wordLen - 1, 0));
+                        }
+
+                        return clean.slice(0, this.wordLen);
+                    },
+
+                    handleInput(event) {
+                        this.answer = this.sanitize(event.target.value);
+                        event.target.value = this.answer;
+
+                        if (this.answer.length >= this.wordLen) {
+                            this.submit();
+                            return;
+                        }
+
+                        this.focusHidden();
+                    },
+
+                    handleClick() {
+                        this.focusHidden();
+                    },
+
+                    handleKeydown(event) {
+                        if (event.key === 'Backspace') {
+                            if (this.isFirstHint && this.answer.length <= 1) {
+                                event.preventDefault();
+                            }
+                            return;
+                        }
+
+                        if (event.key === 'Enter') {
+                            this.submit();
+                            event.preventDefault();
+                        }
+                    },
+
+                    charAt(i) {
+                        return this.answer.charAt(i) || '';
+                    },
+
+                    isActiveBox(i) {
+                        const activeIndex = Math.min(
+                            Math.max(this.answer.length, this.startIdx),
+                            Math.max(this.wordLen - 1, 0)
+                        );
+
+                        return this.answer.length < this.wordLen && i === activeIndex;
+                    },
+
+                    submit() {
+                        this.$wire.submitWithAnswer(this.answer);
+                    },
+                };
+            };
+        </script>
+        @endonce
 
         {{-- ══════════════════════════════════════════════════════════════════ --}}
         {{-- SETUP PHASE                                                        --}}
@@ -98,11 +192,12 @@
                             class="px-4 py-2.5 rounded-xl font-bold border-2 transition-all {{ $hintType === 'blanks' ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400' }}">
                             _ _ _ _ (blanks)
                         </button>
-                        <button wire:click="$set('hintType', 'first_letter')"
-                            class="px-4 py-2.5 rounded-xl font-bold border-2 transition-all {{ $hintType === 'first_letter' ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400' }}">
-                            W _ _ _ (1st letter)
-                        </button>
                     </div>
+                    @if($hintType === 'none')
+                    <p class="mt-3 text-xs font-semibold text-amber-600">
+                        Use using laptop or disable sugestion bar on your portable device.
+                    </p>
+                    @endif
                 </div>
 
                 {{-- Exam Mode --}}
@@ -271,35 +366,91 @@
                         <span>🔊 Hear the word</span>
                     </button>
 
-                    {{-- Hint --}}
-                    @if($hint)
-                    <div class="mt-5 text-2xl sm:text-3xl font-mono tracking-[0.35em] text-slate-300">
-                        {{ $hint }}
+                    {{-- Mode note (single input mode) --}}
+                    @if($hintType === 'none')
+                    <div class="mt-5 text-slate-300 text-sm font-semibold">
+                        Single input mode. Best used on a laptop or with the suggestion bar disabled on your portable device.
                     </div>
-                    @else
-                    <div class="mt-5 text-slate-500 text-sm italic">No hint — you've got this!</div>
                     @endif
                 </div>
 
-                <div class="px-8 py-8"
-                    x-data
-                    x-init="$nextTick(() => $el.querySelector('input')?.focus())">
-                    <input
-                        wire:model.live="userAnswer"
-                        wire:keydown.enter="submitAnswer"
-                        type="text"
-                        autocomplete="off"
-                        autocorrect="off"
-                        autocapitalize="off"
-                        spellcheck="false"
-                        placeholder="Type the word here…"
-                        class="w-full text-center text-3xl sm:text-4xl font-extrabold border-b-4 border-emerald-400 bg-transparent py-3 text-slate-800 placeholder-slate-300 outline-none focus:border-teal-500 tracking-wider">
+                {{-- ── Answer input ─────────────────────────────────────────── --}}
+                @php
+                    $wordLen    = mb_strlen($currentWord);
+                    // Responsive box sizing based on word length
+                    $boxSize = match(true) {
+                        $wordLen <= 5  => 'h-16 text-3xl',
+                        $wordLen <= 8  => 'h-14 text-2xl',
+                        $wordLen <= 12 => 'h-12 text-xl',
+                        default        => 'h-10 text-lg',
+                    };
+                @endphp
 
-                    <button wire:click="submitAnswer"
+                @if($hintType === 'none')
+                <div class="px-4 sm:px-8 py-8">
+                    <div class="max-w-md mx-auto">
+                        <input
+                            type="text"
+                            wire:model.live="userAnswer"
+                            wire:keydown.enter.prevent="submitAnswer"
+                            wire:key="spelling-single-input-{{ $currentIndex }}"
+                            x-data
+                            x-init="$nextTick(() => $el.focus())"
+                            inputmode="text"
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                            class="w-full h-16 rounded-2xl border-2 border-slate-200 bg-white px-5 text-center text-3xl font-extrabold text-slate-800 outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                            placeholder="Type the whole word">
+                    </div>
+
+                    <button type="button" wire:click="submitAnswer"
                         class="mt-6 w-full py-4 rounded-2xl font-extrabold text-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
                         Check ✓
                     </button>
                 </div>
+                @else
+                <div class="px-4 sm:px-8 py-8"
+                    x-data="window.spellingBoxes()"
+                    data-word-len="{{ $wordLen }}"
+                    data-start-idx="0"
+                    data-first-letter=""
+                    data-is-first-hint="false">
+
+                    {{-- Boxes grid --}}
+                    <div class="relative flex justify-center cursor-text"
+                        style="display:grid; grid-template-columns: repeat({{ $wordLen }}, 1fr); gap: clamp(3px, 1.5vw, 10px); max-width: min(100%, {{ $wordLen * 56 }}px); margin: 0 auto;">
+                        <input
+                            x-ref="hiddenInput"
+                            type="text"
+                            maxlength="{{ $wordLen }}"
+                            inputmode="text"
+                            enterkeyhint="done"
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            spellcheck="false"
+                            aria-label="Spell the word"
+                            class="absolute inset-0 z-10 w-full h-full opacity-0 cursor-text"
+                            x-on:click="handleClick()"
+                            x-on:input="handleInput($event)"
+                            x-on:keydown="handleKeydown($event)">
+                        @for($i = 0; $i < $wordLen; $i++)
+                        <div
+                            class="{{ $boxSize }} w-full flex items-center justify-center text-center leading-none font-extrabold rounded-xl border-2 outline-none transition-all bg-white border-slate-200 text-slate-800"
+                            x-bind:class="isActiveBox({{ $i }}) ? 'ring-2 ring-teal-200 border-teal-500' : ''">
+                            <span class="block leading-none" x-text="charAt({{ $i }})"></span>
+                        </div>
+                        @endfor
+                    </div>
+
+                    <button type="button" x-on:click.prevent="submit()"
+                        class="mt-6 w-full py-4 rounded-2xl font-extrabold text-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                        Check ✓
+                    </button>
+                </div>
+                @endif
             </div>
         </div>
         @endif

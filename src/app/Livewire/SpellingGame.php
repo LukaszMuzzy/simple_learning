@@ -15,7 +15,7 @@ class SpellingGame extends Component
     public int    $questionCount = 10;
     public int    $displayTime   = 4;  // seconds to show word (0 = manual hide)
     public int    $timePerAnswer = 0;  // seconds to type   (0 = unlimited)
-    public string $hintType      = 'blanks'; // none | blanks | first_letter
+    public string $hintType      = 'blanks'; // none | blanks
     public bool   $examMode      = false;
 
     // ── Playing ─────────────────────────────────────────────────────────────────
@@ -71,6 +71,7 @@ class SpellingGame extends Component
         }
 
         $this->showCurrentWord();
+        $this->dispatch('scroll-to-top');
     }
 
     private function showCurrentWord(): void
@@ -110,6 +111,13 @@ class SpellingGame extends Component
                 $this->maybeProceed();
             }
         }
+    }
+
+    /** Called from Alpine with the concatenated letter-box answer. */
+    public function submitWithAnswer(string $answer): void
+    {
+        $this->userAnswer = $answer;
+        $this->submitAnswer();
     }
 
     /** Submit answer (called explicitly or by timer). */
@@ -214,10 +222,6 @@ class SpellingGame extends Component
     {
         $word = $this->currentWord;
         $len  = mb_strlen($word);
-
-        if ($this->hintType === 'first_letter') {
-            return mb_substr($word, 0, 1) . str_repeat(' _', $len - 1);
-        }
 
         if ($this->hintType === 'blanks') {
             return implode(' ', array_fill(0, $len, '_'));
