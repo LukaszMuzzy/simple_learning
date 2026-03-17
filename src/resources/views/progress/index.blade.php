@@ -21,11 +21,11 @@
             </div>
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 text-center">
                 <div class="text-4xl font-black text-blue-600">{{ $stats['addition_subtraction'] }}</div>
-                <div class="text-sm font-semibold text-slate-500 mt-1">Add/Sub Games</div>
+                <div class="text-sm font-semibold text-slate-500 mt-1">Maths Games</div>
             </div>
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 text-center">
-                <div class="text-4xl font-black text-green-600">{{ $stats['multiplication'] }}</div>
-                <div class="text-sm font-semibold text-slate-500 mt-1">Multiplication Games</div>
+                <div class="text-4xl font-black text-emerald-600">{{ $stats['spelling'] ?? 0 }}</div>
+                <div class="text-sm font-semibold text-slate-500 mt-1">Spelling Games</div>
             </div>
         </div>
 
@@ -46,14 +46,25 @@
                 @endphp
                 <div class="px-6 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center space-x-4">
-                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl
-                            {{ $session->game_type === 'multiplication' ? 'bg-green-100' : 'bg-blue-100' }}">
-                            {{ $session->game_type === 'multiplication' ? '×' : '±' }}
+                        @php
+                            $gameIcon = match($session->game_type) {
+                                'multiplication'       => ['bg-green-100', '×'],
+                                'addition_subtraction' => ['bg-blue-100', '±'],
+                                'spelling'             => ['bg-emerald-100', '📝'],
+                                default                => ['bg-slate-100', '?'],
+                            };
+                            $gameLabel = match($session->game_type) {
+                                'multiplication'       => '4th Class Multiplication',
+                                'addition_subtraction' => 'Addition & Subtraction',
+                                'spelling'             => 'Spelling Practise',
+                                default                => ucfirst($session->game_type),
+                            };
+                        @endphp
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-xl {{ $gameIcon[0] }}">
+                            {{ $gameIcon[1] }}
                         </div>
                         <div>
-                            <p class="font-bold text-slate-800">
-                                {{ $session->game_type === 'multiplication' ? '4th Class Multiplication' : 'Addition & Subtraction' }}
-                            </p>
+                            <p class="font-bold text-slate-800">{{ $gameLabel }}</p>
                             <p class="text-sm text-slate-500">
                                 {{ $session->created_at->format('d M Y, H:i') }}
                                 @if($session->time_taken_seconds)
@@ -78,6 +89,14 @@
                                 <span class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs font-medium">
                                     {{ $session->settings['answer_mode'] === 'type' ? 'Typed' : 'Multiple Choice' }}
                                 </span>
+                                @endif
+                                @if(isset($session->settings['word_list']))
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">
+                                    {{ \App\Data\WordLists::labels()[$session->settings['word_list']] ?? $session->settings['word_list'] }}
+                                </span>
+                                @endif
+                                @if(!empty($session->settings['exam_mode']))
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs font-medium">Exam</span>
                                 @endif
                             </div>
                             @endif

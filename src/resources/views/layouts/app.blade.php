@@ -52,6 +52,11 @@
                                 <span class="text-xl">🔢</span>
                                 <span class="font-semibold">Mathematics</span>
                             </a>
+                            <a href="{{ route('english.index') }}"
+                                class="flex items-center space-x-3 px-4 py-2.5 text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 transition-colors">
+                                <span class="text-xl">📚</span>
+                                <span class="font-semibold">English</span>
+                            </a>
                         </div>
                     </div>
 
@@ -127,6 +132,10 @@
                             class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-semibold">
                             <span>🔢</span><span>Mathematics</span>
                         </a>
+                        <a href="{{ route('english.index') }}"
+                            class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 font-semibold">
+                            <span>📚</span><span>English</span>
+                        </a>
                         <div class="border-t border-slate-100 my-2"></div>
                         @auth
                             <a href="{{ route('progress.index') }}"
@@ -173,7 +182,7 @@
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 mt-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-sm text-slate-500">
-            © {{ date('Y') }} Simple Learning — Making math fun for everyone!
+            © {{ date('Y') }} Simple Learning — Making learning fun for everyone!
         </div>
     </footer>
 

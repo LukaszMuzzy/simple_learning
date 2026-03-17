@@ -14,16 +14,18 @@ class ProgressController extends Controller
             ->orderByDesc('created_at')
             ->paginate(15);
 
+        $uid = $request->user()->id;
+
         $stats = [
-            'total_games' => GameSession::where('user_id', $request->user()->id)->whereNotNull('completed_at')->count(),
-            'total_correct' => GameSession::where('user_id', $request->user()->id)->sum('correct_answers'),
-            'total_questions' => GameSession::where('user_id', $request->user()->id)->sum('total_questions'),
-            'addition_subtraction' => GameSession::where('user_id', $request->user()->id)
-                ->where('game_type', 'addition_subtraction')
+            'total_games'          => GameSession::where('user_id', $uid)->whereNotNull('completed_at')->count(),
+            'total_correct'        => GameSession::where('user_id', $uid)->sum('correct_answers'),
+            'total_questions'      => GameSession::where('user_id', $uid)->sum('total_questions'),
+            'addition_subtraction' => GameSession::where('user_id', $uid)
+                ->whereIn('game_type', ['addition_subtraction', 'multiplication'])
                 ->whereNotNull('completed_at')
                 ->count(),
-            'multiplication' => GameSession::where('user_id', $request->user()->id)
-                ->where('game_type', 'multiplication')
+            'spelling'             => GameSession::where('user_id', $uid)
+                ->where('game_type', 'spelling')
                 ->whereNotNull('completed_at')
                 ->count(),
         ];

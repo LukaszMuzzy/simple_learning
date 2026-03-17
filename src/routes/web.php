@@ -20,6 +20,14 @@ Route::get('/math/multiplication', function () {
     return view('math.multiplication');
 })->name('math.multiplication');
 
+Route::get('/english', function () {
+    return view('english.index');
+})->name('english.index');
+
+Route::get('/english/spelling', function () {
+    return view('english.spelling');
+})->name('english.spelling');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
