@@ -10,6 +10,13 @@ export default {
         './app/Livewire/**/*.php',
     ],
 
+    safelist: [
+        // Number Bonds game — teal selected-state classes (dynamically constructed in blade)
+        'bg-teal-600', 'border-teal-500', 'text-teal-700', 'text-teal-500',
+        'hover:border-teal-300', 'bg-teal-50', 'text-teal-600',
+        'bg-teal-100', 'border-teal-400',
+    ],
+
     theme: {
         extend: {
             fontFamily: {

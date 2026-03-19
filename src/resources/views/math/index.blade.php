@@ -65,6 +65,30 @@
                 </div>
             </a>
 
+            <!-- Number Bonds -->
+            <a href="{{ route('math.number-bonds') }}"
+                class="group bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-lg hover:border-teal-200 transition-all duration-200 hover:-translate-y-1">
+                <div class="flex items-start justify-between mb-5">
+                    <div class="w-16 h-16 bg-teal-100 rounded-2xl flex items-center justify-center group-hover:bg-teal-600 transition-colors">
+                        <span class="text-3xl font-black text-teal-600 group-hover:text-white transition-colors">🔗</span>
+                    </div>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide">Available</span>
+                </div>
+                <h2 class="text-2xl font-extrabold text-slate-800 mb-2">Number Bonds</h2>
+                <p class="text-slate-500 mb-5">Fill in the missing number on the bond tree. Practise the relationship between a whole and its two parts.</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-teal-50 text-teal-700 rounded-full text-xs font-semibold">Totals up to 100</span>
+                    <span class="px-3 py-1 bg-cyan-50 text-cyan-700 rounded-full text-xs font-semibold">Missing any part</span>
+                    <span class="px-3 py-1 bg-slate-50 text-slate-600 rounded-full text-xs font-semibold">Multiple Choice</span>
+                </div>
+                <div class="mt-6 flex items-center text-teal-600 font-bold group-hover:text-teal-800 transition-colors">
+                    <span>Play Now</span>
+                    <svg class="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+                    </svg>
+                </div>
+            </a>
+
         </div>
     </div>
 </x-app-layout>

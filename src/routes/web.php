@@ -23,6 +23,10 @@ Route::get('/math/multiplication', function () {
     return view('math.multiplication');
 })->name('math.multiplication');
 
+Route::get('/math/number-bonds', function () {
+    return view('math.number-bonds');
+})->name('math.number-bonds');
+
 Route::get('/english', function () {
     return view('english.index');
 })->name('english.index');
