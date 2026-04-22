@@ -91,17 +91,6 @@
                                 startX: event.clientX,
                                 startY: event.clientY,
                             };
-                        } else if (this.selectedId !== null) {
-                            // Empty slot + selected tile: record tap-to-place intent
-                            // (nothing to drag from here so it can never become a drag)
-                            this.pendingTap = {
-                                tileId: null,
-                                isFromSlot: false,
-                                targetSlotId: slotId,
-                                el: null,
-                                startX: event.clientX,
-                                startY: event.clientY,
-                            };
                         }
                     },
 
@@ -183,7 +172,6 @@
                             const slotEl = els.find(el => el.hasAttribute && el.hasAttribute('data-slot-id'));
                             if (slotEl) {
                                 this.slots[parseInt(slotEl.dataset.slotId)].tileId = tileId;
-                                this._checkAutoSubmit();
                             }
                             return;
                         }
@@ -195,29 +183,12 @@
 
                         if (pt.tileId !== null) {
                             if (pt.isFromSlot) {
-                                // Tap on filled slot
-                                const slot = this.slots[pt.fromSlotId];
-                                if (this.selectedId !== null) {
-                                    // Swap: place selected tile here, hold displaced tile
-                                    slot.tileId    = this.selectedId;
-                                    this.selectedId = pt.tileId;
-                                    // selectedId is now non-null so no auto-submit
-                                } else {
-                                    // Lift tile from slot into hand
-                                    slot.tileId    = null;
-                                    this.selectedId = pt.tileId;
-                                }
+                                // Tap a placed tile → return it to the bank
+                                this.slots[pt.fromSlotId].tileId = null;
                             } else {
-                                // Tap on bank tile: select / switch / deselect
-                                this.selectedId = (this.selectedId === pt.tileId) ? null : pt.tileId;
-                            }
-                        } else if (pt.targetSlotId !== undefined) {
-                            // Tap on empty slot while holding a selected tile
-                            const slot = this.slots[pt.targetSlotId];
-                            if (slot && this.selectedId !== null) {
-                                slot.tileId    = this.selectedId;
-                                this.selectedId = null;
-                                this._checkAutoSubmit();
+                                // Tap a bank tile → snap into the first available empty slot
+                                const emptySlot = this.slots.find(s => s.tileId === null);
+                                if (emptySlot) emptySlot.tileId = pt.tileId;
                             }
                         }
                     },
@@ -232,11 +203,7 @@
                     },
 
                     _checkAutoSubmit() {
-                        if (!this.submitted && this.selectedId === null && this.slots.every(s => s.tileId !== null)) {
-                            this.submitted = true;
-                            const word = this.assembledWord;
-                            setTimeout(() => this.$wire.submitWithAnswer(word), 700);
-                        }
+                        // Auto-submit removed — user reviews the word then presses Check ✓.
                     },
 
                     clearAll() {
@@ -262,7 +229,6 @@
                     manualSubmit() {
                         if (!this.isComplete || this.submitted) return;
                         this.submitted = true;
-                        this.selectedId = null;
                         this.$wire.submitWithAnswer(this.assembledWord);
                     },
                 };

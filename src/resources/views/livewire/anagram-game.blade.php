@@ -56,8 +56,6 @@
                             if (!slot) return;
                             if (slot.tileId != null) {
                                 this.pendingTap = { tileId: slot.tileId, isFromSlot: true, fromSlotId: slotId, el: event.currentTarget, startX: event.clientX, startY: event.clientY };
-                            } else if (this.selectedId !== null) {
-                                this.pendingTap = { tileId: null, isFromSlot: false, targetSlotId: slotId, el: null, startX: event.clientX, startY: event.clientY };
                             }
                         },
                         moveDrag(event) {
@@ -97,20 +95,20 @@
                                 clone.remove();
                                 this.dragging = null; this.dragOverSlotId = null;
                                 const slotEl = els.find(el => el.hasAttribute && el.hasAttribute('data-slot-id'));
-                                if (slotEl) { this.slots[parseInt(slotEl.dataset.slotId)].tileId = tileId; this._checkAutoSubmit(); }
+                                if (slotEl) { this.slots[parseInt(slotEl.dataset.slotId)].tileId = tileId; }
                                 return;
                             }
                             if (!this.pendingTap) return;
                             const pt = this.pendingTap; this.pendingTap = null;
                             if (pt.tileId !== null) {
                                 if (pt.isFromSlot) {
-                                    const slot = this.slots[pt.fromSlotId];
-                                    if (this.selectedId !== null) { slot.tileId = this.selectedId; this.selectedId = pt.tileId; }
-                                    else { slot.tileId = null; this.selectedId = pt.tileId; }
-                                } else { this.selectedId = (this.selectedId === pt.tileId) ? null : pt.tileId; }
-                            } else if (pt.targetSlotId !== undefined) {
-                                const slot = this.slots[pt.targetSlotId];
-                                if (slot && this.selectedId !== null) { slot.tileId = this.selectedId; this.selectedId = null; this._checkAutoSubmit(); }
+                                    // Tap a placed tile → return it to the bank
+                                    this.slots[pt.fromSlotId].tileId = null;
+                                } else {
+                                    // Tap a bank tile → snap into first empty slot
+                                    const emptySlot = this.slots.find(s => s.tileId === null);
+                                    if (emptySlot) emptySlot.tileId = pt.tileId;
+                                }
                             }
                         },
                         cancelDrag() {
@@ -118,17 +116,13 @@
                             this.pendingTap = null;
                         },
                         _checkAutoSubmit() {
-                            if (!this.submitted && this.selectedId === null && this.slots.every(s => s.tileId !== null)) {
-                                this.submitted = true;
-                                const word = this.assembledWord;
-                                setTimeout(() => this.$wire.submitWithAnswer(word), 700);
-                            }
+                            // Auto-submit removed — user reviews the word then presses Check ✓.
                         },
                         clearAll() {
                             if (this.submitted) return;
                             if (this.dragging) this.cancelDrag();
                             this.slots.forEach(s => { s.tileId = null; });
-                            this.selectedId = null; this.pendingTap = null;
+                            this.pendingTap = null;
                         },
                         get assembledWord() {
                             return this.slots.map(s => { if (s.tileId == null) return ''; const t = this.tiles.find(t => t.id === s.tileId); return t ? t.letter : ''; }).join('');
