@@ -11,6 +11,263 @@
     <div class="max-w-2xl mx-auto">
         @once
         <script>
+            window.spellingPuzzle = function () {
+                return {
+                    tiles: [],          // [{id, letter}] — shuffled, stable order
+                    slots: [],          // [{id, tileId: null | number}]
+                    submitted: false,
+                    tileClass: '',
+
+                    // ── Drag state ───────────────────────────────────────────────
+                    dragging: null,       // { tileId, clone, offsetX, offsetY } | null
+                    dragOverSlotId: null,
+
+                    // ── Tap state ────────────────────────────────────────────────
+                    // A touch/click starts as a pendingTap; only becomes a full drag
+                    // if the pointer moves more than DRAG_THRESHOLD pixels.
+                    selectedId: null,
+                    pendingTap: null,     // { tileId, isFromSlot, fromSlotId?, targetSlotId?, el, startX, startY }
+                    DRAG_THRESHOLD: 8,
+
+                    init() {
+                        const word     = this.$el.dataset.word || '';
+                        const letters  = [...word];
+                        this.tileClass = this.$el.dataset.tileSize || 'h-12 w-12 text-xl';
+
+                        this.slots = letters.map((_, i) => ({ id: i, tileId: null }));
+
+                        let arr = letters.map((l, i) => ({ id: i, letter: l.toUpperCase() }));
+
+                        if (arr.length > 1) {
+                            let attempts = 0, inOrder;
+                            do {
+                                for (let i = arr.length - 1; i > 0; i--) {
+                                    const j = Math.floor(Math.random() * (i + 1));
+                                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                                }
+                                inOrder  = arr.every((t, i) => t.letter === letters[i].toUpperCase());
+                                attempts++;
+                            } while (inOrder && attempts < 10);
+                        }
+
+                        this.tiles = arr;
+                    },
+
+                    slotOf(tileId) {
+                        return this.slots.find(s => s.tileId === tileId) ?? null;
+                    },
+
+                    tileInSlot(slotId) {
+                        const id = this.slots[slotId]?.tileId;
+                        if (id == null) return null;
+                        return this.tiles.find(t => t.id === id) ?? null;
+                    },
+
+                    // ── Pointer-down handlers ────────────────────────────────────
+
+                    onBankTilePointerDown(event, tileId) {
+                        if (this.submitted) return;
+                        this.pendingTap = {
+                            tileId,
+                            isFromSlot: false,
+                            el: event.currentTarget,
+                            startX: event.clientX,
+                            startY: event.clientY,
+                        };
+                    },
+
+                    onSlotPointerDown(event, slotId) {
+                        if (this.submitted) return;
+                        const slot = this.slots[slotId];
+                        if (!slot) return;
+
+                        if (slot.tileId != null) {
+                            // Filled slot: record for drag-or-tap resolution
+                            this.pendingTap = {
+                                tileId: slot.tileId,
+                                isFromSlot: true,
+                                fromSlotId: slotId,
+                                el: event.currentTarget,
+                                startX: event.clientX,
+                                startY: event.clientY,
+                            };
+                        } else if (this.selectedId !== null) {
+                            // Empty slot + selected tile: record tap-to-place intent
+                            // (nothing to drag from here so it can never become a drag)
+                            this.pendingTap = {
+                                tileId: null,
+                                isFromSlot: false,
+                                targetSlotId: slotId,
+                                el: null,
+                                startX: event.clientX,
+                                startY: event.clientY,
+                            };
+                        }
+                    },
+
+                    // ── Unified move handler ─────────────────────────────────────
+
+                    moveDrag(event) {
+                        // ── Promote pendingTap → full drag if threshold exceeded ──
+                        if (this.pendingTap && !this.dragging) {
+                            const dx   = event.clientX - this.pendingTap.startX;
+                            const dy   = event.clientY - this.pendingTap.startY;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+
+                            if (dist > this.DRAG_THRESHOLD && this.pendingTap.tileId !== null) {
+                                const { tileId, isFromSlot, fromSlotId, el } = this.pendingTap;
+
+                                // Clone BEFORE mutating state so the snapshot shows the tile
+                                const rect  = el.getBoundingClientRect();
+                                const clone = el.cloneNode(true);
+                                ['x-bind:class', '@pointerdown', '@pointerdown.prevent', 'x-show']
+                                    .forEach(a => clone.removeAttribute(a));
+                                clone.style.cssText = [
+                                    'position:fixed',
+                                    `left:${rect.left}px`,
+                                    `top:${rect.top}px`,
+                                    `width:${rect.width}px`,
+                                    `height:${rect.height}px`,
+                                    'z-index:9999',
+                                    'pointer-events:none',
+                                    'opacity:0.92',
+                                    'transform:scale(1.12)',
+                                    'transition:none',
+                                    'margin:0',
+                                    'cursor:grabbing',
+                                    'user-select:none',
+                                ].join(';');
+                                document.body.appendChild(clone);
+
+                                // Mutate state AFTER clone is captured
+                                if (isFromSlot) this.slots[fromSlotId].tileId = null;
+                                this.selectedId = null;
+                                this.pendingTap = null;
+
+                                this.dragging = {
+                                    tileId,
+                                    clone,
+                                    offsetX: event.clientX - rect.left,
+                                    offsetY: event.clientY - rect.top,
+                                };
+                            }
+                            return;
+                        }
+
+                        // ── Move clone during active drag ────────────────────────
+                        if (!this.dragging) return;
+                        const { clone, offsetX, offsetY } = this.dragging;
+                        clone.style.left = (event.clientX - offsetX) + 'px';
+                        clone.style.top  = (event.clientY - offsetY) + 'px';
+
+                        clone.style.display = 'none';
+                        const els    = document.elementsFromPoint(event.clientX, event.clientY);
+                        clone.style.display = '';
+                        const slotEl = els.find(el => el.hasAttribute && el.hasAttribute('data-slot-id'));
+                        this.dragOverSlotId = slotEl ? parseInt(slotEl.dataset.slotId) : null;
+                    },
+
+                    // ── Unified pointer-up / tap handler ────────────────────────
+
+                    endInteraction(event) {
+                        // ── Drop after a real drag ───────────────────────────────
+                        if (this.dragging) {
+                            const { tileId, clone } = this.dragging;
+                            clone.style.display = 'none';
+                            const els    = document.elementsFromPoint(event.clientX, event.clientY);
+                            clone.style.display = '';
+                            clone.remove();
+                            this.dragging     = null;
+                            this.dragOverSlotId = null;
+
+                            const slotEl = els.find(el => el.hasAttribute && el.hasAttribute('data-slot-id'));
+                            if (slotEl) {
+                                this.slots[parseInt(slotEl.dataset.slotId)].tileId = tileId;
+                                this._checkAutoSubmit();
+                            }
+                            return;
+                        }
+
+                        // ── Handle as a tap ──────────────────────────────────────
+                        if (!this.pendingTap) return;
+                        const pt = this.pendingTap;
+                        this.pendingTap = null;
+
+                        if (pt.tileId !== null) {
+                            if (pt.isFromSlot) {
+                                // Tap on filled slot
+                                const slot = this.slots[pt.fromSlotId];
+                                if (this.selectedId !== null) {
+                                    // Swap: place selected tile here, hold displaced tile
+                                    slot.tileId    = this.selectedId;
+                                    this.selectedId = pt.tileId;
+                                    // selectedId is now non-null so no auto-submit
+                                } else {
+                                    // Lift tile from slot into hand
+                                    slot.tileId    = null;
+                                    this.selectedId = pt.tileId;
+                                }
+                            } else {
+                                // Tap on bank tile: select / switch / deselect
+                                this.selectedId = (this.selectedId === pt.tileId) ? null : pt.tileId;
+                            }
+                        } else if (pt.targetSlotId !== undefined) {
+                            // Tap on empty slot while holding a selected tile
+                            const slot = this.slots[pt.targetSlotId];
+                            if (slot && this.selectedId !== null) {
+                                slot.tileId    = this.selectedId;
+                                this.selectedId = null;
+                                this._checkAutoSubmit();
+                            }
+                        }
+                    },
+
+                    cancelDrag() {
+                        if (this.dragging) {
+                            this.dragging.clone.remove();
+                            this.dragging     = null;
+                            this.dragOverSlotId = null;
+                        }
+                        this.pendingTap = null;
+                    },
+
+                    _checkAutoSubmit() {
+                        if (!this.submitted && this.selectedId === null && this.slots.every(s => s.tileId !== null)) {
+                            this.submitted = true;
+                            const word = this.assembledWord;
+                            setTimeout(() => this.$wire.submitWithAnswer(word), 700);
+                        }
+                    },
+
+                    clearAll() {
+                        if (this.submitted) return;
+                        if (this.dragging) this.cancelDrag();
+                        this.slots.forEach(s => { s.tileId = null; });
+                        this.selectedId = null;
+                        this.pendingTap = null;
+                    },
+
+                    get assembledWord() {
+                        return this.slots.map(s => {
+                            if (s.tileId == null) return '';
+                            const t = this.tiles.find(t => t.id === s.tileId);
+                            return t ? t.letter : '';
+                        }).join('');
+                    },
+
+                    get isComplete() {
+                        return this.slots.every(s => s.tileId !== null);
+                    },
+
+                    manualSubmit() {
+                        if (!this.isComplete || this.submitted) return;
+                        this.submitted = true;
+                        this.selectedId = null;
+                        this.$wire.submitWithAnswer(this.assembledWord);
+                    },
+                };
+            };
+
             window.spellingBoxes = function () {
                 return {
                     wordLen: 0,
@@ -179,23 +436,32 @@
                     </div>
                 </div>
 
-                {{-- Hint Type --}}
+                {{-- Answer Mode --}}
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-1">Hint while typing</label>
-                    <p class="text-xs text-slate-400 mb-2">Shown after the word hides to help you remember the structure.</p>
+                    <label class="block text-sm font-bold text-slate-700 mb-1">Answer mode</label>
+                    <p class="text-xs text-slate-400 mb-2">How you'll spell the word after it's hidden.</p>
                     <div class="flex flex-wrap gap-2">
                         <button wire:click="$set('hintType', 'none')"
                             class="px-4 py-2.5 rounded-xl font-bold border-2 transition-all {{ $hintType === 'none' ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400' }}">
-                            No hint
+                            ✏️ Type freely
                         </button>
                         <button wire:click="$set('hintType', 'blanks')"
                             class="px-4 py-2.5 rounded-xl font-bold border-2 transition-all {{ $hintType === 'blanks' ? 'bg-slate-600 border-slate-600 text-white shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400' }}">
-                            _ _ _ _ (blanks)
+                            📝 _ _ _ _ (boxes)
+                        </button>
+                        <button wire:click="$set('hintType', 'puzzle')"
+                            class="px-4 py-2.5 rounded-xl font-bold border-2 transition-all {{ $hintType === 'puzzle' ? 'bg-violet-600 border-violet-600 text-white shadow-md' : 'bg-white border-violet-200 text-violet-600 hover:border-violet-400' }}">
+                            🧩 Arrange tiles
                         </button>
                     </div>
                     @if($hintType === 'none')
                     <p class="mt-3 text-xs font-semibold text-amber-600">
-                        Use using laptop or disable sugestion bar on your portable device.
+                        Best used on a laptop or with the suggestion bar disabled on your portable device.
+                    </p>
+                    @endif
+                    @if($hintType === 'puzzle')
+                    <p class="mt-3 text-xs font-semibold text-violet-600">
+                        All letters are provided — tap to pick one up, then tap a box to place it in order.
                     </p>
                     @endif
                 </div>
@@ -384,6 +650,13 @@
                         $wordLen <= 12 => 'h-12 text-xl',
                         default        => 'h-10 text-lg',
                     };
+                    // Square tile sizing for the puzzle mode
+                    $puzzleTileSize = match(true) {
+                        $wordLen <= 5  => 'h-14 w-14 text-2xl',
+                        $wordLen <= 7  => 'h-12 w-12 text-xl',
+                        $wordLen <= 10 => 'h-11 w-11 text-lg',
+                        default        => 'h-9 w-9 text-base',
+                    };
                 @endphp
 
                 @if($hintType === 'none')
@@ -409,6 +682,96 @@
                         class="mt-6 w-full py-4 rounded-2xl font-extrabold text-xl bg-emerald-500 hover:bg-emerald-600 text-white transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
                         Check ✓
                     </button>
+                </div>
+                @elseif($hintType === 'puzzle')
+                {{-- ── Drag-and-drop / tap tile puzzle mode ────────────────────── --}}
+                <div class="px-4 sm:px-8 py-8"
+                    x-data="spellingPuzzle()"
+                    data-word="{{ $currentWord }}"
+                    data-tile-size="{{ $puzzleTileSize }}"
+                    wire:key="spelling-puzzle-{{ $currentIndex }}"
+                    @pointermove.window="moveDrag($event)"
+                    @pointerup.window="endInteraction($event)"
+                    @pointercancel.window="cancelDrag()">
+
+                    <p class="text-center text-slate-400 text-xs font-semibold uppercase tracking-widest mb-5">
+                        Drag or tap letters into the boxes
+                    </p>
+
+                    {{-- Target slots (answer row) --}}
+                    <div class="flex flex-wrap justify-center gap-2 mb-6">
+                        <template x-for="slot in slots" :key="slot.id">
+                            <div
+                                :data-slot-id="slot.id"
+                                class="flex items-center justify-center rounded-xl border-2 font-extrabold leading-none transition-all select-none touch-none"
+                                :class="[
+                                    tileClass,
+                                    submitted
+                                        ? 'bg-violet-200 border-violet-500 text-violet-900 cursor-default'
+                                        : (dragOverSlotId === slot.id
+                                            ? 'border-violet-500 bg-violet-100 scale-105 shadow-md cursor-copy'
+                                            : (slot.tileId !== null
+                                                ? 'bg-violet-100 border-violet-400 text-violet-800 cursor-grab active:cursor-grabbing'
+                                                : (selectedId !== null
+                                                    ? 'border-violet-400 bg-violet-50 cursor-pointer'
+                                                    : 'border-dashed border-slate-300 bg-slate-50')))
+                                ]"
+                                @pointerdown.prevent="onSlotPointerDown($event, slot.id)">
+                                <span
+                                    :data-slot-id="slot.id"
+                                    x-text="tileInSlot(slot.id)?.letter ?? ''"
+                                    class="block leading-none pointer-events-none"></span>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Divider --}}
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="flex-1 h-px bg-slate-200"></div>
+                        <span class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Letters</span>
+                        <div class="flex-1 h-px bg-slate-200"></div>
+                    </div>
+
+                    {{-- Source bank (shuffled tiles) --}}
+                    <div class="flex flex-wrap justify-center gap-2 min-h-14 mb-6">
+                        <template x-for="tile in tiles" :key="tile.id">
+                            <div
+                                x-show="slotOf(tile.id) === null"
+                                @pointerdown.prevent="onBankTilePointerDown($event, tile.id)"
+                                class="flex items-center justify-center rounded-xl border-2 font-extrabold leading-none transition-all select-none touch-none"
+                                :class="[
+                                    tileClass,
+                                    dragging && dragging.tileId === tile.id
+                                        ? 'opacity-30 cursor-grabbing'
+                                        : (selectedId === tile.id
+                                            ? 'bg-violet-500 border-violet-600 text-white ring-4 ring-violet-200 scale-105 shadow-md cursor-grab'
+                                            : 'bg-white border-violet-200 text-violet-700 hover:border-violet-400 hover:bg-violet-50 cursor-grab active:cursor-grabbing')
+                                ]">
+                                <span x-text="tile.letter" class="block leading-none pointer-events-none"></span>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="flex gap-3">
+                        <button
+                            type="button"
+                            @click="clearAll()"
+                            :disabled="submitted"
+                            class="px-5 py-3 rounded-xl border-2 border-slate-200 text-slate-500 font-bold transition-all hover:border-red-300 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:text-slate-500">
+                            🗑 Clear
+                        </button>
+                        <button
+                            type="button"
+                            @click="manualSubmit()"
+                            :disabled="!isComplete || submitted"
+                            class="flex-1 py-3 rounded-2xl font-extrabold text-xl transition-all shadow-md"
+                            :class="isComplete && !submitted
+                                ? 'bg-emerald-500 hover:bg-emerald-600 text-white hover:shadow-lg hover:-translate-y-0.5'
+                                : 'bg-slate-100 text-slate-400 cursor-not-allowed'">
+                            Check ✓
+                        </button>
+                    </div>
                 </div>
                 @else
                 <div class="px-4 sm:px-8 py-8"

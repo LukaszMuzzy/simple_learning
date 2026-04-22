@@ -15,7 +15,7 @@ class SpellingGame extends Component
     public int    $questionCount = 10;
     public int    $displayTime   = 4;  // seconds to show word (0 = manual hide)
     public int    $timePerAnswer = 0;  // seconds to type   (0 = unlimited)
-    public string $hintType      = 'blanks'; // none | blanks
+    public string $hintType      = 'blanks'; // none | blanks | puzzle
     public bool   $examMode      = false;
 
     // ── Playing ─────────────────────────────────────────────────────────────────
@@ -217,7 +217,7 @@ class SpellingGame extends Component
         $this->words       = [];
     }
 
-    /** The hint shown during the typing phase. */
+    /** The hint shown during the typing phase (unused in puzzle mode). */
     public function getHintString(): string
     {
         $word = $this->currentWord;
@@ -227,7 +227,7 @@ class SpellingGame extends Component
             return implode(' ', array_fill(0, $len, '_'));
         }
 
-        return ''; // none
+        return ''; // none | puzzle
     }
 
     /** Word lists for the setup form. */
