@@ -41,20 +41,35 @@
                 </div>
             </a>
 
-            <!-- Coming soon cards -->
-            @foreach([
-                ['🔤', 'Anagram Solver', 'Unscramble jumbled letters to find the word'],
-                ['📖', 'Word Definitions', 'Match words to their meanings'],
-            ] as $item)
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 opacity-50 cursor-not-allowed">
-                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-5">
-                    <span class="text-3xl">{{ $item[0] }}</span>
+            <!-- Anagram game -->
+            <a href="{{ route('english.anagram') }}"
+                class="group bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-lg hover:border-amber-200 transition-all duration-200 hover:-translate-y-1">
+                <div class="w-16 h-16 bg-amber-100 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-amber-500 transition-colors">
+                    <span class="text-3xl">🔤</span>
                 </div>
-                <h3 class="text-xl font-bold text-slate-800 mb-2">{{ $item[1] }}</h3>
-                <p class="text-slate-500 mb-4 text-sm">{{ $item[2] }}</p>
-                <span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-semibold">Coming Soon</span>
-            </div>
-            @endforeach
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Anagram Challenge</h3>
+                <p class="text-slate-500 mb-4 text-sm">Unscramble jumbled letters to find the hidden word!</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">Drag &amp; tap tiles</span>
+                    <span class="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-semibold">All word lists</span>
+                    <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-semibold">💡 Hints</span>
+                </div>
+            </a>
+
+            <!-- Word definitions game -->
+            <a href="{{ route('english.word-definitions') }}"
+                class="group bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-lg hover:border-sky-200 transition-all duration-200 hover:-translate-y-1">
+                <div class="w-16 h-16 bg-sky-100 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-sky-500 transition-colors">
+                    <span class="text-3xl">📖</span>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Word Definitions</h3>
+                <p class="text-slate-500 mb-4 text-sm">See a word, pick the correct meaning from four choices.</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-semibold">Multiple choice</span>
+                    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">3 difficulty levels</span>
+                    <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">🔊 Audio</span>
+                </div>
+            </a>
         </div>
     </section>
 </x-app-layout>

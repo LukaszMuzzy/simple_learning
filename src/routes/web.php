@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\WordDefinitionController;
+use App\Http\Controllers\Admin\WordDefinitionGroupController;
 use App\Http\Controllers\Admin\WordListController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProgressController;
@@ -35,6 +37,14 @@ Route::get('/english/spelling', function () {
     return view('english.spelling');
 })->name('english.spelling');
 
+Route::get('/english/anagram', function () {
+    return view('english.anagram');
+})->name('english.anagram');
+
+Route::get('/english/word-definitions', function () {
+    return view('english.word-definitions');
+})->name('english.word-definitions');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -58,6 +68,25 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     Route::patch('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])->name('users.toggle-admin');
+
+    // Word Definitions
+    Route::get('/word-definitions', [WordDefinitionController::class, 'index'])->name('word-definitions.index');
+    Route::get('/word-definitions/create', [WordDefinitionController::class, 'create'])->name('word-definitions.create');
+    Route::post('/word-definitions', [WordDefinitionController::class, 'store'])->name('word-definitions.store');
+    Route::get('/word-definitions/{wordDefinition}/edit', [WordDefinitionController::class, 'edit'])->name('word-definitions.edit');
+    Route::patch('/word-definitions/{wordDefinition}', [WordDefinitionController::class, 'update'])->name('word-definitions.update');
+    Route::delete('/word-definitions/{wordDefinition}', [WordDefinitionController::class, 'destroy'])->name('word-definitions.destroy');
+
+    // Definition Groups
+    Route::get('/definition-groups', [WordDefinitionGroupController::class, 'index'])->name('definition-groups.index');
+    Route::get('/definition-groups/create', [WordDefinitionGroupController::class, 'create'])->name('definition-groups.create');
+    Route::post('/definition-groups', [WordDefinitionGroupController::class, 'store'])->name('definition-groups.store');
+    Route::get('/definition-groups/{definitionGroup}/edit', [WordDefinitionGroupController::class, 'edit'])->name('definition-groups.edit');
+    Route::patch('/definition-groups/{definitionGroup}', [WordDefinitionGroupController::class, 'update'])->name('definition-groups.update');
+    Route::delete('/definition-groups/{definitionGroup}', [WordDefinitionGroupController::class, 'destroy'])->name('definition-groups.destroy');
+    Route::post('/definition-groups/{definitionGroup}/definitions', [WordDefinitionGroupController::class, 'addDefinitions'])->name('definition-groups.add-definitions');
+    Route::delete('/definition-groups/{definitionGroup}/definitions/{definition}', [WordDefinitionGroupController::class, 'removeDefinition'])->name('definition-groups.remove-definition');
+    Route::patch('/definition-groups/{definitionGroup}/toggle-active', [WordDefinitionGroupController::class, 'toggleActive'])->name('definition-groups.toggle-active');
 
     // Word Lists
     Route::get('/word-lists', [WordListController::class, 'index'])->name('word-lists.index');

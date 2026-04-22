@@ -17,6 +17,10 @@ export default {
         'bg-teal-100', 'border-teal-400',
         // Spelling puzzle — violet active-state classes used only inside PHP ternaries
         'bg-violet-600', 'border-violet-600',
+        // Word definition admin — difficulty radio checked states (dynamic colour names in loop)
+        'peer-checked:border-emerald-500', 'peer-checked:bg-emerald-50', 'peer-checked:text-emerald-700',
+        'peer-checked:border-amber-500',   'peer-checked:bg-amber-50',   'peer-checked:text-amber-700',
+        'peer-checked:border-red-500',     'peer-checked:bg-red-50',     'peer-checked:text-red-700',
     ],
 
     theme: {
