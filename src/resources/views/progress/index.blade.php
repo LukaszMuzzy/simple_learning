@@ -38,6 +38,85 @@
             </div>
         </div>
 
+        {{-- Trickiest Multiplication Tables --}}
+        @if($trickyTables->count() > 0)
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
+            <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h2 class="text-xl font-extrabold text-slate-800">🔥 Trickiest Multiplication Tables</h2>
+                    <p class="text-sm text-slate-400 mt-0.5">Based on your full history — sorted by most wrong answers</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    {{-- Practice Trickiest button --}}
+                    @if(!empty($trickyNums))
+                    <a href="{{ route('math.multiplication') }}?focus={{ implode(',', $trickyNums) }}"
+                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Practise Trickiest
+                    </a>
+                    @endif
+                    {{-- Reset button --}}
+                    <form method="POST" action="{{ route('progress.tricky-tables.reset') }}"
+                        x-data
+                        @submit.prevent="if(confirm('This will delete all your Trickiest Tables history and start fresh. Are you sure?')) $el.submit()">
+                        @csrf @method('DELETE')
+                        <button type="submit"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 text-sm font-bold rounded-lg border border-slate-200 hover:border-red-200 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Reset History
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="divide-y divide-slate-100">
+                @foreach($trickyTables as $row)
+                @php
+                    $rowPct = $row->attempts > 0
+                        ? round((($row->attempts - $row->wrong_count) / $row->attempts) * 100)
+                        : 100;
+                @endphp
+                <div class="px-6 py-4 flex items-center justify-between gap-4">
+                    {{-- Equation --}}
+                    <span class="font-mono font-black text-slate-800 text-xl w-32 shrink-0">
+                        {{ $row->num1 }} × {{ $row->num2 }} = {{ $row->num1 * $row->num2 }}
+                    </span>
+
+                    {{-- Progress bar --}}
+                    <div class="flex-1 hidden sm:block">
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                                <div class="h-2.5 rounded-full {{ $rowPct >= 80 ? 'bg-green-500' : ($rowPct >= 50 ? 'bg-yellow-400' : 'bg-red-500') }}"
+                                     style="width: {{ $rowPct }}%"></div>
+                            </div>
+                            <span class="text-sm font-bold w-12 text-right {{ $rowPct >= 80 ? 'text-green-600' : ($rowPct >= 50 ? 'text-yellow-600' : 'text-red-600') }}">
+                                {{ $rowPct }}%
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Detail chips --}}
+                    <div class="flex items-center gap-3 shrink-0 text-sm">
+                        <span class="px-2.5 py-1 bg-red-50 text-red-600 font-semibold rounded-lg">
+                            {{ $row->wrong_count }} wrong
+                        </span>
+                        <span class="px-2.5 py-1 bg-slate-50 text-slate-500 font-medium rounded-lg">
+                            {{ $row->attempts }} tries
+                        </span>
+                        <span class="px-2.5 py-1 bg-purple-50 text-purple-600 font-medium rounded-lg hidden sm:inline">
+                            ~{{ round($row->avg_time, 1) }}s avg
+                        </span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
         {{-- Recent Games --}}
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
             <div class="px-6 py-5 border-b border-slate-100">

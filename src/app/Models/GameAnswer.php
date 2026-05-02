@@ -10,6 +10,8 @@ class GameAnswer extends Model
     protected $fillable = [
         'game_session_id',
         'question',
+        'num1',
+        'num2',
         'correct_answer',
         'user_answer',
         'is_correct',

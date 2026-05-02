@@ -14,9 +14,9 @@
                 <label class="block text-sm font-bold text-slate-700 mb-3">
                     Number of Questions: <span class="text-green-600">{{ $questionCount }}</span>
                 </label>
-                <div class="flex flex-wrap gap-2">
+                <div class="flex flex-wrap gap-2 mb-3">
                     @foreach([5, 10, 15, 20, 30, 50] as $n)
-                    <button wire:click="$set('questionCount', {{ $n }})"
+                    <button wire:click="setQuestionCount({{ $n }})"
                         class="px-4 py-2 rounded-lg border-2 font-bold text-sm transition-all duration-150
                                {{ $questionCount === $n
                                   ? 'border-green-500 bg-green-600 text-white'
@@ -24,6 +24,13 @@
                         {{ $n }}
                     </button>
                     @endforeach
+                </div>
+                <div class="flex items-center gap-3">
+                    <input type="number" wire:model.live="customQuestionCount" wire:change="applyCustomQuestionCount"
+                        min="1" max="200"
+                        class="w-24 text-center border-2 border-slate-200 rounded-lg py-2 font-bold text-slate-700 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
+                        placeholder="e.g. 21">
+                    <span class="text-xs text-slate-400 italic">or type a custom number (1–200)</span>
                 </div>
             </div>
 
@@ -43,6 +50,57 @@
                         {{ $label }}
                     </button>
                     @endforeach
+                </div>
+            </div>
+
+            {{-- Time per game --}}
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-3">
+                    Time per Game:
+                    <span class="text-green-600">
+                        @if($timePerGame === 0)
+                            No Limit
+                        @elseif($timePerGame < 60)
+                            {{ $timePerGame }}s
+                        @elseif($timePerGame % 60 === 0)
+                            {{ intdiv($timePerGame, 60) }}m
+                        @else
+                            {{ intdiv($timePerGame, 60) }}m {{ $timePerGame % 60 }}s
+                        @endif
+                    </span>
+                </label>
+
+                {{-- Preset buttons --}}
+                <div class="flex flex-wrap gap-2 mb-4">
+                    @foreach([[0, '∞ No Limit'], [60, '1 min'], [120, '2 min'], [180, '3 min'], [240, '4 min'], [300, '5 min']] as [$t, $label])
+                    <button wire:click="setTimePerGame({{ $t }})"
+                        class="px-4 py-2 rounded-lg border-2 font-bold text-sm transition-all duration-150
+                               {{ $timePerGame === $t
+                                  ? 'border-green-500 bg-green-600 text-white'
+                                  : 'border-slate-200 text-slate-600 hover:border-green-300' }}">
+                        {{ $label }}
+                    </button>
+                    @endforeach
+                </div>
+
+                {{-- Custom mins / secs inputs --}}
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1">
+                        <input type="number" wire:model.live="customGameMins" wire:change="applyCustomGameTime"
+                            min="0" max="99"
+                            class="w-16 text-center border-2 border-slate-200 rounded-lg py-2 font-bold text-slate-700 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
+                            placeholder="0">
+                        <span class="text-sm font-semibold text-slate-500">min</span>
+                    </div>
+                    <span class="text-slate-300 font-bold">:</span>
+                    <div class="flex items-center gap-1">
+                        <input type="number" wire:model.live="customGameSecs" wire:change="applyCustomGameTime"
+                            min="0" max="59"
+                            class="w-16 text-center border-2 border-slate-200 rounded-lg py-2 font-bold text-slate-700 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all"
+                            placeholder="0">
+                        <span class="text-sm font-semibold text-slate-500">sec</span>
+                    </div>
+                    <span class="text-xs text-slate-400 italic">or type custom time</span>
                 </div>
             </div>
 
@@ -163,7 +221,7 @@
 
     @elseif($phase === 'playing')
     {{-- ======================== PLAYING PHASE ======================== --}}
-    <div class="space-y-5" @if($timePerQuestion > 0) wire:poll.1000ms="tick" @endif>
+    <div class="space-y-5" @if($timePerQuestion > 0 || $timePerGame > 0) wire:poll.1000ms="tick" @endif>
 
         {{-- Progress bar --}}
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
@@ -186,7 +244,7 @@
             </div>
         </div>
 
-        {{-- Timer bar --}}
+        {{-- Per-question timer bar --}}
         @if($timePerQuestion > 0)
         @php
             $pctLeft    = $timePerQuestion > 0 ? ($timeLeft / $timePerQuestion) * 100 : 100;
@@ -195,12 +253,39 @@
         @endphp
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 px-5 py-4">
             <div class="flex items-center justify-between mb-2">
-                <span class="text-sm font-semibold text-slate-500">Time remaining</span>
+                <span class="text-sm font-semibold text-slate-500">Question time</span>
                 <span class="text-2xl font-black {{ $textColor }}">{{ $timeLeft }}s</span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
                 <div class="{{ $timerColor }} h-3 rounded-full transition-all duration-900"
                      style="width: {{ $pctLeft }}%"></div>
+            </div>
+        </div>
+        @endif
+
+        {{-- Game timer bar --}}
+        @if($timePerGame > 0)
+        @php
+            $gamePct   = $timePerGame > 0 ? ($gameTimeLeft / $timePerGame) * 100 : 100;
+            $gameColor = $gameTimeLeft <= 10 ? 'bg-red-500' : ($gameTimeLeft <= 30 ? 'bg-orange-400' : 'bg-blue-500');
+            $gameText  = $gameTimeLeft <= 10 ? 'text-red-600' : ($gameTimeLeft <= 30 ? 'text-orange-500' : 'text-blue-700');
+            $gameMins  = intdiv($gameTimeLeft, 60);
+            $gameSecs  = $gameTimeLeft % 60;
+        @endphp
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 px-5 py-4">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-semibold text-slate-500">Game time left</span>
+                <span class="text-2xl font-black {{ $gameText }}">
+                    @if($gameMins > 0)
+                        {{ $gameMins }}m {{ str_pad($gameSecs, 2, '0', STR_PAD_LEFT) }}s
+                    @else
+                        {{ $gameTimeLeft }}s
+                    @endif
+                </span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div class="{{ $gameColor }} h-3 rounded-full transition-all duration-900"
+                     style="width: {{ $gamePct }}%"></div>
             </div>
         </div>
         @endif
@@ -329,27 +414,44 @@
 
     @elseif($phase === 'summary')
     {{-- ======================== SUMMARY PHASE ======================== --}}
+    @php
+        $skipped       = $questionCount - $questionsAnswered;
+        // Score is always out of the full question count — skipped = wrong
+        $pct           = $questionCount > 0 ? round(($correctCount / $questionCount) * 100) : 0;
+        $answeredTimes = array_column($results, 'time_taken');
+        $avgTime       = count($answeredTimes) > 0 ? round(array_sum($answeredTimes) / count($answeredTimes), 1) : 0;
+    @endphp
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="bg-gradient-to-r {{ $examMode ? 'from-amber-500 to-orange-600' : 'from-green-500 to-teal-600' }} px-8 py-8 text-white text-center">
-            @php $pct = $questionCount > 0 ? round(($correctCount / $questionCount) * 100) : 0; @endphp
             <div class="text-6xl mb-3">
                 @if($pct >= 80) 🏆 @elseif($pct >= 60) 🎯 @else 💪 @endif
             </div>
             <h2 class="text-3xl font-extrabold mb-1">
                 {{ $examMode ? 'Exam Complete!' : 'Practice Complete!' }}
             </h2>
+            @if($endedByGameTimer)
+            <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-bold mt-2">⏱ Time's Up!</span>
+            @endif
             @if($examMode)
-            <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-bold mt-1">📝 Exam Mode</span>
+            <span class="inline-block px-3 py-1 bg-white/20 rounded-full text-sm font-bold mt-2">📝 Exam Mode</span>
             @endif
         </div>
 
         <div class="p-6 sm:p-8">
+
             {{-- Score --}}
-            <div class="text-center mb-8">
+            <div class="text-center mb-6">
                 <div class="text-7xl font-black {{ $pct >= 80 ? 'text-green-600' : ($pct >= 60 ? 'text-yellow-500' : 'text-red-500') }}">
                     {{ $pct }}%
                 </div>
-                <p class="text-slate-500 mt-1 text-lg">{{ $correctCount }} out of {{ $questionCount }} correct</p>
+                <p class="text-slate-500 mt-1 text-lg">
+                    {{ $correctCount }} correct out of {{ $questionCount }} questions
+                </p>
+                @if($endedByGameTimer && $skipped > 0)
+                <p class="text-slate-400 text-sm mt-1">
+                    ({{ $questionsAnswered }} reached · {{ $skipped }} not attempted — counted as wrong)
+                </p>
+                @endif
                 @if($pct >= 80)
                     <p class="text-green-600 font-bold mt-2">Excellent work! 🌟</p>
                 @elseif($pct >= 60)
@@ -359,20 +461,20 @@
                 @endif
             </div>
 
-            {{-- Stats --}}
-            <div class="grid grid-cols-3 gap-4 mb-8">
+            {{-- Stats grid --}}
+            <div class="grid grid-cols-3 gap-3 mb-8">
                 <div class="text-center p-4 bg-green-50 rounded-xl">
                     <div class="text-3xl font-black text-green-600">{{ $correctCount }}</div>
                     <div class="text-xs font-semibold text-green-700 mt-1">Correct</div>
                 </div>
                 <div class="text-center p-4 bg-red-50 rounded-xl">
-                    <div class="text-3xl font-black text-red-500">{{ $wrongCount }}</div>
-                    <div class="text-xs font-semibold text-red-700 mt-1">Wrong</div>
+                    <div class="text-3xl font-black text-red-500">{{ $questionCount - $correctCount }}</div>
+                    <div class="text-xs font-semibold text-red-700 mt-1">Wrong / Skipped</div>
                 </div>
                 <div class="text-center p-4 bg-blue-50 rounded-xl">
                     <div class="text-3xl font-black text-blue-600">
                         @if($totalTimeSeconds >= 60)
-                            {{ floor($totalTimeSeconds / 60) }}m{{ $totalTimeSeconds % 60 }}s
+                            {{ floor($totalTimeSeconds / 60) }}m {{ $totalTimeSeconds % 60 }}s
                         @else
                             {{ $totalTimeSeconds }}s
                         @endif
@@ -380,6 +482,27 @@
                     <div class="text-xs font-semibold text-blue-700 mt-1">Total Time</div>
                 </div>
             </div>
+
+            {{-- Avg time note --}}
+            @if($questionsAnswered > 0)
+            <p class="text-center text-sm text-slate-400 -mt-4 mb-8">
+                Avg {{ $avgTime }}s per question answered
+                @if($questionsAnswered < $questionCount)
+                · {{ $questionsAnswered }} of {{ $questionCount }} questions reached
+                @endif
+            </p>
+            @endif
+
+            @auth
+            @if(!empty($difficultSequences))
+            <div class="mb-8 p-4 bg-orange-50 border border-orange-100 rounded-xl flex items-start gap-3">
+                <span class="text-xl mt-0.5">🔥</span>
+                <div>
+                    <p class="font-bold text-orange-800 text-sm">You have tricky tables — check <a href="{{ route('progress.index') }}" class="underline">My Progress</a> to see which ones and focus your practice.</p>
+                </div>
+            </div>
+            @endif
+            @endauth
 
             {{-- Answers Review --}}
             <div class="mb-8">
@@ -396,13 +519,28 @@
                             <span class="text-lg">{{ $r['is_correct'] ? '✓' : '✗' }}</span>
                             <span class="font-mono font-bold text-slate-700">{{ $r['question'] }} = {{ $r['correct_answer'] }}</span>
                         </div>
-                        @if(!$r['is_correct'])
-                        <span class="text-sm text-red-600 font-semibold">
-                            You: {{ $r['user_answer'] !== null ? $r['user_answer'] : '—' }}
-                        </span>
-                        @endif
+                        <div class="flex items-center gap-4">
+                            <span class="text-xs text-slate-400">{{ $r['time_taken'] }}s</span>
+                            @if(!$r['is_correct'])
+                            <span class="text-sm text-red-600 font-semibold">
+                                You: {{ $r['user_answer'] !== null ? $r['user_answer'] : '—' }}
+                            </span>
+                            @endif
+                        </div>
                     </div>
                     @endforeach
+                    {{-- Skipped questions shown as not attempted --}}
+                    @if($endedByGameTimer && $skipped > 0)
+                    @for($i = 0; $i < $skipped; $i++)
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-lg text-slate-400">—</span>
+                            <span class="font-mono text-slate-400">Not reached (time ran out)</span>
+                        </div>
+                        <span class="text-xs text-slate-400">counted as wrong</span>
+                    </div>
+                    @endfor
+                    @endif
                 </div>
             </div>
 

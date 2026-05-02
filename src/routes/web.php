@@ -56,6 +56,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/progress', [ProgressController::class, 'index'])->name('progress.index');
     Route::delete('/progress/{session}', [ProgressController::class, 'destroy'])->name('progress.destroy');
+    Route::delete('/progress/tricky-tables/reset', [ProgressController::class, 'resetTrickyTables'])->name('progress.tricky-tables.reset');
 });
 
 // ── Admin ────────────────────────────────────────────────────────────────────
