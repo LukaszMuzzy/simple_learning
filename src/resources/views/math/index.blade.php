@@ -50,7 +50,7 @@
                     </div>
                     <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold uppercase tracking-wide">Available</span>
                 </div>
-                <h2 class="text-2xl font-extrabold text-slate-800 mb-2">4th Class Multiplication</h2>
+                <h2 class="text-2xl font-extrabold text-slate-800 mb-2">Multiplication Game</h2>
                 <p class="text-slate-500 mb-5">Master your multiplication tables from 0 to 12. Perfect for building speed and confidence!</p>
                 <div class="flex flex-wrap gap-2">
                     <span class="px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">Tables 0–12</span>

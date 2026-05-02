@@ -3,8 +3,8 @@
     {{-- ======================== SETUP PHASE ======================== --}}
     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div class="bg-gradient-to-r from-green-500 to-teal-600 px-8 py-6 text-white">
-            <h1 class="text-2xl sm:text-3xl font-extrabold">× 4th Class Multiplication</h1>
-            <p class="text-green-100 mt-1">Tables 0–12 · Configure your exam below</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold">× Multiplication Game</h1>
+            <p class="text-green-100 mt-1">Tables 0–12 · Configure your practice below</p>
         </div>
 
         <div class="p-6 sm:p-8 space-y-7">
@@ -44,6 +44,38 @@
                     </button>
                     @endforeach
                 </div>
+            </div>
+
+            {{-- Number selection --}}
+            <div>
+                <label class="block text-sm font-bold text-slate-700 mb-1">
+                    Practice Numbers
+                    <span class="font-normal text-slate-400 ml-1">
+                        @if(empty($selectedNumbers))
+                            (all 0–12)
+                        @else
+                            ({{ implode(', ', $selectedNumbers) }})
+                        @endif
+                    </span>
+                </label>
+                <p class="text-xs text-slate-400 mb-3">Pick which numbers appear as the <em>first</em> factor. Leave all off to use 0–12 randomly.</p>
+                <div class="flex flex-wrap gap-2">
+                    @foreach(range(0, 12) as $n)
+                    <button wire:click="toggleNumber({{ $n }})"
+                        class="w-10 h-10 rounded-lg border-2 font-bold text-sm transition-all duration-150
+                               {{ in_array($n, $selectedNumbers)
+                                  ? 'border-green-500 bg-green-600 text-white'
+                                  : 'border-slate-200 text-slate-600 hover:border-green-300' }}">
+                        {{ $n }}
+                    </button>
+                    @endforeach
+                </div>
+                @if(!empty($selectedNumbers))
+                <button wire:click="$set('selectedNumbers', [])"
+                    class="mt-2 text-xs text-slate-400 hover:text-red-500 transition-colors underline">
+                    Clear selection (use all)
+                </button>
+                @endif
             </div>
 
             {{-- Answer mode --}}

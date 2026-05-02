@@ -1,5 +1,5 @@
 <x-app-layout>
-    <x-slot name="title">4th Class Multiplication</x-slot>
+    <x-slot name="title">Multiplication Game</x-slot>
 
     <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div class="mb-8">
@@ -12,7 +12,7 @@
                 <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
-                <span class="text-sm font-medium text-slate-600">4th Class Multiplication</span>
+                <span class="text-sm font-medium text-slate-600">Multiplication Game</span>
             </div>
         </div>
 

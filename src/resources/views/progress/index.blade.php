@@ -63,7 +63,7 @@
                                 default                => ['bg-slate-100', '?'],
                             };
                             $gameLabel = match($session->game_type) {
-                                'multiplication'       => '4th Class Multiplication',
+                                'multiplication'       => 'Multiplication Game',
                                 'addition_subtraction' => 'Addition & Subtraction',
                                 'spelling'             => 'Spelling Practise',
                                 default                => ucfirst($session->game_type),

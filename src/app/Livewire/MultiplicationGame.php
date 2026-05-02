@@ -15,6 +15,8 @@ class MultiplicationGame extends Component
     public int $timePerQuestion = 0; // 0 = no limit
     public string $answerMode = 'type'; // type, multiple_choice
     public bool $examMode = false; // when true, no per-question feedback; reveal all at end
+    // Numbers the user wants to practise (empty = all 0–12)
+    public array $selectedNumbers = [];
 
     // Playing phase
     public int $currentQuestion = 0;
@@ -38,6 +40,19 @@ class MultiplicationGame extends Component
     public int $totalTimeSeconds = 0;
     public int $gameStartTime = 0;
 
+    public function toggleNumber(int $n): void
+    {
+        if (in_array($n, $this->selectedNumbers)) {
+            $this->selectedNumbers = array_values(array_filter(
+                $this->selectedNumbers,
+                fn ($v) => $v !== $n
+            ));
+        } else {
+            $this->selectedNumbers[] = $n;
+            sort($this->selectedNumbers);
+        }
+    }
+
     public function startGame(): void
     {
         $this->phase = 'playing';
@@ -55,6 +70,7 @@ class MultiplicationGame extends Component
                     'answer_mode' => $this->answerMode,
                     'time_per_question' => $this->timePerQuestion,
                     'exam_mode' => $this->examMode,
+                    'selected_numbers' => $this->selectedNumbers,
                 ],
                 'total_questions' => $this->questionCount,
             ]);
@@ -64,6 +80,12 @@ class MultiplicationGame extends Component
         $this->generateQuestion();
     }
 
+    private function pickNumber(): int
+    {
+        $pool = empty($this->selectedNumbers) ? range(0, 12) : $this->selectedNumbers;
+        return $pool[array_rand($pool)];
+    }
+
     public function generateQuestion(): void
     {
         $this->userAnswer = '';
@@ -71,7 +93,7 @@ class MultiplicationGame extends Component
         $this->answered = false;
         $this->questionStartTime = time();
 
-        $this->num1 = rand(0, 12);
+        $this->num1 = $this->pickNumber();
         $this->num2 = rand(0, 12);
         $this->correctAnswer = $this->num1 * $this->num2;
 

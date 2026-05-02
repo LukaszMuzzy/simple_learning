@@ -29,7 +29,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
                     </svg>
                 </div>
-                <h3 class="text-lg font-extrabold text-slate-800">4th Class Multiplication</h3>
+                <h3 class="text-lg font-extrabold text-slate-800">Multiplication Game</h3>
                 <p class="text-slate-500 text-sm mt-1">Master your times tables 0–12</p>
             </a>
         </div>
