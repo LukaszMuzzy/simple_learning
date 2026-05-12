@@ -11,6 +11,7 @@
     <link href="https://fonts.bunny.net/css?family=nunito:400,500,600,700,800&display=swap" rel="stylesheet" />
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 <body class="h-full bg-slate-100 font-['Nunito']" x-data="{ sidebarOpen: false }">
 
@@ -96,6 +97,16 @@
                             d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                     </svg>
                     <span>Definition Groups</span>
+                </a>
+
+                <a href="{{ route('admin.game-links') }}"
+                    class="flex items-center space-x-3 px-3 py-2.5 rounded-xl font-semibold transition-colors
+                        {{ request()->routeIs('admin.game-links') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                    <span>Game Links</span>
                 </a>
 
                 <div class="pt-4 mt-4 border-t border-slate-700">
@@ -195,5 +206,7 @@
         </div>
     </div>
 
+    @livewireScripts
+    @stack('scripts')
 </body>
 </html>

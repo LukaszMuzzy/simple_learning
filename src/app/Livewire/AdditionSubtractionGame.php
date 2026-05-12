@@ -44,7 +44,31 @@ class AdditionSubtractionGame extends Component
 
     public function mount(): void
     {
-        // Component initialized in setup phase
+        $q = request()->query();
+
+        if (!empty($q['op']) && in_array($q['op'], ['mix', 'add', 'subtract'], true)) {
+            $this->operation = $q['op'];
+        }
+
+        if (!empty($q['questions'])) {
+            $this->questionCount = max(1, min(200, (int) $q['questions']));
+        }
+
+        if (isset($q['tpq'])) {
+            $this->timePerQuestion = max(0, (int) $q['tpq']);
+        }
+
+        if (!empty($q['digits']) && in_array((int) $q['digits'], [1, 2, 3], true)) {
+            $this->maxDigits = (int) $q['digits'];
+        }
+
+        if (isset($q['neg'])) {
+            $this->allowNegative = (bool) (int) $q['neg'];
+        }
+
+        if (!empty($q['mode']) && in_array($q['mode'], ['type', 'multiple_choice'], true)) {
+            $this->answerMode = $q['mode'];
+        }
     }
 
     public function startGame(): void

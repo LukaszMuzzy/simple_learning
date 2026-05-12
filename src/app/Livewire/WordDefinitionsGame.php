@@ -33,6 +33,19 @@ class WordDefinitionsGame extends Component
 
     // ────────────────────────────────────────────────────────────────────────────
 
+    public function mount(): void
+    {
+        $q = request()->query();
+
+        if (!empty($q['set'])) {
+            $this->wordSet = (string) $q['set'];
+        }
+
+        if (!empty($q['questions'])) {
+            $this->questionCount = max(1, min(200, (int) $q['questions']));
+        }
+    }
+
     public function startGame(): void
     {
         $this->questions     = WordDefinitions::generateQuestions($this->wordSet, $this->questionCount);

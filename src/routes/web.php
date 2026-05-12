@@ -70,6 +70,7 @@ Route::middleware('auth')->group(function () {
 // ── Admin ────────────────────────────────────────────────────────────────────
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/game-links', fn () => view('admin.game-links'))->name('game-links');
 
     // Users
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');

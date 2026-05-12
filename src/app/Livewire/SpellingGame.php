@@ -41,6 +41,35 @@ class SpellingGame extends Component
 
     // ────────────────────────────────────────────────────────────────────────────
 
+    public function mount(): void
+    {
+        $q = request()->query();
+
+        if (!empty($q['list'])) {
+            $this->wordListKey = (string) $q['list'];
+        }
+
+        if (!empty($q['questions'])) {
+            $this->questionCount = max(1, min(200, (int) $q['questions']));
+        }
+
+        if (isset($q['display'])) {
+            $this->displayTime = max(0, (int) $q['display']);
+        }
+
+        if (isset($q['tpa'])) {
+            $this->timePerAnswer = max(0, (int) $q['tpa']);
+        }
+
+        if (!empty($q['hint']) && in_array($q['hint'], ['none', 'blanks', 'puzzle'], true)) {
+            $this->hintType = $q['hint'];
+        }
+
+        if (isset($q['exam'])) {
+            $this->examMode = (bool) (int) $q['exam'];
+        }
+    }
+
     public function startGame(): void
     {
         $all = WordLists::get($this->wordListKey);

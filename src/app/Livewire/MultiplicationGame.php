@@ -50,7 +50,32 @@ class MultiplicationGame extends Component
 
     public function mount(): void
     {
-        $focus = request()->query('focus', '');
+        $q = request()->query();
+
+        if (!empty($q['questions'])) {
+            $this->questionCount = $this->customQuestionCount = max(1, min(200, (int) $q['questions']));
+        }
+
+        if (isset($q['tpq'])) {
+            $this->timePerQuestion = max(0, (int) $q['tpq']);
+        }
+
+        if (isset($q['tpg'])) {
+            $secs = max(0, (int) $q['tpg']);
+            $this->timePerGame    = $secs;
+            $this->customGameMins = intdiv($secs, 60);
+            $this->customGameSecs = $secs % 60;
+        }
+
+        if (!empty($q['mode']) && in_array($q['mode'], ['type', 'multiple_choice'], true)) {
+            $this->answerMode = $q['mode'];
+        }
+
+        if (!empty($q['exam'])) {
+            $this->examMode = (bool) (int) $q['exam'];
+        }
+
+        $focus = $q['focus'] ?? '';
         if ($focus !== '') {
             $nums = array_filter(
                 array_map('intval', explode(',', $focus)),

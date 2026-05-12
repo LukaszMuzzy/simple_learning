@@ -41,6 +41,42 @@ class TimeGame extends Component
     public int $gameStartTime = 0;
     public ?int $sessionId = null;
 
+    public function mount(): void
+    {
+        $q = request()->query();
+
+        if (!empty($q['questions'])) {
+            $n = max(1, min(100, (int) $q['questions']));
+            $this->questionCount = $this->customQuestionCount = $n;
+        }
+
+        if (isset($q['tpq'])) {
+            $this->timePerQuestion = max(0, (int) $q['tpq']);
+        }
+
+        if (!empty($q['precisions'])) {
+            $allowed = ['hour', 'half', 'quarter', 'twenty', 'ten', 'five', 'minute'];
+            $vals = array_filter(
+                explode(',', $q['precisions']),
+                fn ($p) => in_array($p, $allowed, true)
+            );
+            if (!empty($vals)) {
+                $this->selectedPrecisions = array_values($vals);
+            }
+        }
+
+        if (!empty($q['modes'])) {
+            $allowed = ['digital_to_analog', 'text_to_analog', 'analog_to_digital', 'analog_to_text', 'voice_to_analog'];
+            $vals = array_filter(
+                explode(',', $q['modes']),
+                fn ($m) => in_array($m, $allowed, true)
+            );
+            if (!empty($vals)) {
+                $this->selectedModes = array_values($vals);
+            }
+        }
+    }
+
     public function setQuestionCount(int $n): void
     {
         $this->questionCount = $n;

@@ -42,7 +42,30 @@ class NumberBondsGame extends Component
     public int $totalTimeSeconds = 0;
     public int $gameStartTime = 0;
 
-    public function mount(): void {}
+    public function mount(): void
+    {
+        $q = request()->query();
+
+        if (!empty($q['max'])) {
+            $this->totalMax = max(2, (int) $q['max']);
+        }
+
+        if (!empty($q['questions'])) {
+            $this->questionCount = max(1, min(200, (int) $q['questions']));
+        }
+
+        if (isset($q['tpq'])) {
+            $this->timePerQuestion = max(0, (int) $q['tpq']);
+        }
+
+        if (!empty($q['missing']) && in_array($q['missing'], ['random', 'top', 'parts'], true)) {
+            $this->missingPosition = $q['missing'];
+        }
+
+        if (!empty($q['mode']) && in_array($q['mode'], ['type', 'multiple_choice'], true)) {
+            $this->answerMode = $q['mode'];
+        }
+    }
 
     public function startGame(): void
     {

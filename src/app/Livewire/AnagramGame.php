@@ -40,6 +40,23 @@ class AnagramGame extends Component
 
     // ────────────────────────────────────────────────────────────────────────────
 
+    public function mount(): void
+    {
+        $q = request()->query();
+
+        if (!empty($q['list'])) {
+            $this->wordListKey = (string) $q['list'];
+        }
+
+        if (!empty($q['questions'])) {
+            $this->questionCount = max(1, min(200, (int) $q['questions']));
+        }
+
+        if (isset($q['tpw'])) {
+            $this->timePerWord = max(0, (int) $q['tpw']);
+        }
+    }
+
     public function startGame(): void
     {
         $all = WordLists::get($this->wordListKey);
