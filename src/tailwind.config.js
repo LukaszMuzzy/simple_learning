@@ -26,6 +26,20 @@ export default {
         'bg-cyan-600', 'border-cyan-600', 'hover:border-cyan-400', 'hover:bg-cyan-50',
         'bg-sky-600',  'border-sky-600',  'hover:border-sky-300',  'hover:bg-sky-50',
         'border-sky-500', 'bg-sky-50', 'text-sky-700',
+        // Time Telling — voice buttons
+        'bg-violet-600', 'hover:bg-violet-700',
+        'bg-violet-100', 'text-violet-700', 'hover:bg-violet-200', 'border-violet-300',
+        // Time Telling — summary/feedback gradients (used inside PHP match expression)
+        'from-yellow-400', 'to-amber-500',
+        'from-emerald-400', 'to-teal-500',
+        'from-blue-400', 'to-cyan-500',
+        'from-orange-400', 'to-amber-500',
+        'from-slate-500', 'to-slate-600',
+        'from-emerald-400', 'to-green-600',
+        'from-rose-400', 'to-red-600',
+        'from-emerald-500', 'to-green-600',
+        'from-rose-500', 'to-red-600',
+        'bg-gradient-to-br',
     ],
 
     theme: {

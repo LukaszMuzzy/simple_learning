@@ -49,11 +49,6 @@
                         this.setTime(next, this.minute);
                     },
 
-                    snapMinute(min) {
-                        if (this.step <= 1) return min;
-                        return Math.round(min / this.step) * this.step % 60;
-                    },
-
                     pointerToMinute(event) {
                         const svg = this.$refs.face;
                         if (!svg) return this.minute;
@@ -76,16 +71,14 @@
                     move(event) {
                         if (!this.interactive || !this.dragging) return;
                         const rawMinute = this.pointerToMinute(event);
-                        const snappedMinute = this.snapMinute(rawMinute);
                         if (this.dragging === 'minute') {
                             const prev = this.minute;
-                            this.minute = snappedMinute;
-                            if (prev > 45 && snappedMinute < 15) this.adjust('hour', 1);
-                            if (prev < 15 && snappedMinute > 45) this.adjust('hour', -1);
+                            this.minute = rawMinute;
+                            if (prev > 45 && rawMinute < 15) this.adjust('hour', 1);
+                            if (prev < 15 && rawMinute > 45) this.adjust('hour', -1);
                         } else {
                             const hour = Math.round(rawMinute / 5) || 12;
                             this.hour = hour;
-                            this.minute = this.snapMinute((rawMinute % 60 + 60) % 60);
                         }
                         this.sync();
                     },
@@ -254,13 +247,13 @@
                 <div
                     x-data="{
                         phrase: '{{ addslashes($currentQuestion['words']) }}',
-                        speak() {
+                        speakAt(rate) {
                             if (!window.speechSynthesis) return;
                             speechSynthesis.cancel();
                             const say = () => {
                                 const u = new SpeechSynthesisUtterance(this.phrase);
                                 u.lang = 'en-GB';
-                                u.rate = 0.85;
+                                u.rate = rate;
                                 speechSynthesis.speak(u);
                             };
                             const voices = speechSynthesis.getVoices();
@@ -272,25 +265,44 @@
                             }
                         }
                     }"
-                    x-init="$nextTick(() => setTimeout(() => speak(), 400))">
+                    x-init="$nextTick(() => setTimeout(() => speakAt(0.85), 400))">
                     <h2 class="text-xl font-extrabold text-slate-800 mb-2">Listen and set the clock</h2>
-                    <p class="text-slate-500 mb-3">The time has been spoken in British English.</p>
-                    <button
-                        x-on:click="speak()"
-                        class="mb-5 inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-700 transition-colors shadow-sm">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3-3m3 3l3-3M6.343 6.343a8 8 0 000 11.314"/>
-                        </svg>
-                        <span>🔊 Hear again</span>
-                    </button>
+                    <p class="text-slate-500 mb-4">The time has been spoken in British English.</p>
+                    <div class="flex flex-wrap gap-3 mb-5">
+                        <button
+                            x-on:click="speakAt(0.85)"
+                            class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-violet-600 text-white font-bold hover:bg-violet-700 transition-colors shadow-sm">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3-3m3 3l3-3M6.343 6.343a8 8 0 000 11.314"/>
+                            </svg>
+                            <span>🔊 Hear again</span>
+                        </button>
+                        <button
+                            x-on:click="speakAt(0.45)"
+                            class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-violet-100 text-violet-700 font-bold hover:bg-violet-200 transition-colors shadow-sm border border-violet-300">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M6.343 6.343a8 8 0 000 11.314"/>
+                            </svg>
+                            <span>🐢 Hear slowly</span>
+                        </button>
+                    </div>
                 </div>
                 @endif
 
                 @if(in_array($currentQuestion['mode'], ['digital_to_analog', 'text_to_analog', 'voice_to_analog'], true))
                 @php
                     $stepMinutes = 1;
-                    if (in_array('five', $selectedPrecisions, true) && !in_array('minute', $selectedPrecisions, true)) $stepMinutes = 5;
-                    if (in_array('ten', $selectedPrecisions, true) && !in_array('minute', $selectedPrecisions, true)) $stepMinutes = max($stepMinutes, 10);
+                    if (!in_array('minute', $selectedPrecisions, true)) {
+                        if (in_array('five', $selectedPrecisions, true))   $stepMinutes = 5;
+                        if (in_array('ten', $selectedPrecisions, true))    $stepMinutes = max($stepMinutes, 10);
+                        if (in_array('twenty', $selectedPrecisions, true)) $stepMinutes = max($stepMinutes, 20);
+                        if (!in_array('five', $selectedPrecisions, true) && !in_array('ten', $selectedPrecisions, true) && !in_array('twenty', $selectedPrecisions, true)) {
+                            // only hour/half/quarter selected — snap to 15
+                            if (in_array('quarter', $selectedPrecisions, true)) $stepMinutes = 15;
+                            elseif (in_array('half', $selectedPrecisions, true)) $stepMinutes = 30;
+                            elseif (in_array('hour', $selectedPrecisions, true)) $stepMinutes = 60;
+                        }
+                    }
                 @endphp
                 <div
                     x-data="timeClock({ interactive: true, hour: 12, minute: 0, step: {{ $stepMinutes }}, setWire: (h, m) => $wire.setClockAnswer(h, m) })"
@@ -299,7 +311,7 @@
                     @pointercancel.window="endDrag()"
                     class="space-y-4">
                     <div class="flex justify-center">
-                        <svg x-ref="face" viewBox="0 0 400 400" class="w-72 h-72 bg-sky-50 rounded-full border-4 border-sky-200 shadow-inner">
+                        <svg x-ref="face" viewBox="0 0 400 400" class="w-72 h-72 sm:w-[27rem] sm:h-[27rem] bg-sky-50 rounded-full border-4 border-sky-200 shadow-inner">
                             <circle cx="200" cy="200" r="170" fill="white" stroke="#93c5fd" stroke-width="6"></circle>
                             @for($i = 1; $i <= 12; $i++)
                                 @php $angle = deg2rad(($i * 30) - 90); $x = 200 + cos($angle) * 130; $y = 200 + sin($angle) * 130; @endphp
@@ -312,14 +324,23 @@
                             <circle cx="200" cy="200" r="10" fill="#1e293b"></circle>
                         </svg>
                     </div>
-                    <div class="text-center text-slate-700 font-extrabold text-2xl">
-                        <span x-text="`${hour}:${String(minute).padStart(2, '0')}`"></span>
-                    </div>
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                        <button x-on:click="adjust('minute', -1)" class="py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50">- 1 min</button>
-                        <button x-on:click="adjust('minute', 1)" class="py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50">+ 1 min</button>
-                        <button x-on:click="adjust('hour', -1)" class="py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50">- 1 hr</button>
-                        <button x-on:click="adjust('hour', 1)" class="py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50">+ 1 hr</button>
+                        <button x-on:click="adjust('minute', -step)"
+                            class="py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50"
+                            x-text="`− ${step} min`"></button>
+                        <button x-on:click="adjust('minute', step)"
+                            class="py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50"
+                            x-text="`+ ${step} min`"></button>
+                        <button x-on:click="adjust('hour', -1)"
+                            class="py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50">− 1 hr</button>
+                        <button x-on:click="adjust('hour', 1)"
+                            class="py-2 rounded-lg border border-slate-200 font-bold text-slate-700 hover:bg-slate-50">+ 1 hr</button>
+                    </div>
+                    <div class="flex justify-center">
+                        <button x-on:click="setTime(12, 0)"
+                            class="px-4 py-2 rounded-lg border border-slate-200 font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-700 text-sm">
+                            ↺ Reset to 12:00
+                        </button>
                     </div>
                 </div>
                 @endif
@@ -329,7 +350,7 @@
                 <p class="text-slate-500 mb-5">Enter the hours and minutes separately.</p>
                 <div class="flex justify-center mb-6">
                     <div x-data="timeClock({ interactive: false, hour: {{ $currentQuestion['hour'] }}, minute: {{ $currentQuestion['minute'] }} })">
-                        <svg viewBox="0 0 400 400" class="w-72 h-72 bg-sky-50 rounded-full border-4 border-sky-200 shadow-inner">
+                        <svg viewBox="0 0 400 400" class="w-72 h-72 sm:w-[27rem] sm:h-[27rem] bg-sky-50 rounded-full border-4 border-sky-200 shadow-inner">
                             <circle cx="200" cy="200" r="170" fill="white" stroke="#93c5fd" stroke-width="6"></circle>
                             @for($i = 1; $i <= 12; $i++)
                                 @php $angle = deg2rad(($i * 30) - 90); $x = 200 + cos($angle) * 130; $y = 200 + sin($angle) * 130; @endphp
@@ -377,7 +398,7 @@
                 <h2 class="text-xl font-extrabold text-slate-800 mb-2">Read the analog clock and pick the correct phrase</h2>
                 <div class="flex justify-center mb-5">
                     <div x-data="timeClock({ interactive: false, hour: {{ $currentQuestion['hour'] }}, minute: {{ $currentQuestion['minute'] }} })">
-                        <svg viewBox="0 0 400 400" class="w-72 h-72 bg-sky-50 rounded-full border-4 border-sky-200 shadow-inner">
+                        <svg viewBox="0 0 400 400" class="w-72 h-72 sm:w-[27rem] sm:h-[27rem] bg-sky-50 rounded-full border-4 border-sky-200 shadow-inner">
                             <circle cx="200" cy="200" r="170" fill="white" stroke="#93c5fd" stroke-width="6"></circle>
                             @for($i = 1; $i <= 12; $i++)
                                 @php $angle = deg2rad(($i * 30) - 90); $x = 200 + cos($angle) * 130; $y = 200 + sin($angle) * 130; @endphp
@@ -412,15 +433,69 @@
         @endif
 
         @if($phase === 'feedback')
+        @php
+            $feedbackEmojis = $lastCorrect
+                ? ['🎉','⭐','🌟','✅','🥳','👏','🎯','💫']
+                : ['😬','🤔','💪','😅','🙈','😮'];
+            $feedbackEmoji = $feedbackEmojis[($currentIndex) % count($feedbackEmojis)];
+            $feedbackMsg = $lastCorrect
+                ? ['Brilliant!', 'Well done!', 'Spot on!', 'Fantastic!', 'You got it!', 'Nailed it!']
+                : ['Not quite!', 'Keep trying!', 'Nearly there!', 'Have another look!', 'So close!'];
+            $feedbackTitle = $feedbackMsg[($currentIndex) % count($feedbackMsg)];
+        @endphp
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
-            <div class="px-8 py-8 text-white {{ $lastCorrect ? 'bg-gradient-to-r from-emerald-500 to-green-600' : 'bg-gradient-to-r from-rose-500 to-red-600' }}">
-                <h2 class="text-3xl font-extrabold">{{ $lastCorrect ? 'Great job!' : 'Not quite yet' }}</h2>
-                <p class="mt-2 text-lg {{ $lastCorrect ? 'text-emerald-100' : 'text-rose-100' }}">
-                    Correct answer: <strong>{{ $currentQuestion['digital'] }}</strong> ({{ $currentQuestion['words'] }})
+            <div class="px-8 py-8 text-white text-center {{ $lastCorrect ? 'bg-gradient-to-br from-emerald-400 to-green-600' : 'bg-gradient-to-br from-rose-400 to-red-600' }}">
+                <div class="text-6xl mb-3">{{ $feedbackEmoji }}</div>
+                <h2 class="text-3xl font-extrabold">{{ $feedbackTitle }}</h2>
+                <div class="mt-4 inline-block bg-white/20 rounded-2xl px-6 py-3">
+                    <p class="text-lg font-extrabold">{{ $currentQuestion['digital'] }}</p>
+                    <p class="text-sm {{ $lastCorrect ? 'text-emerald-100' : 'text-rose-100' }}">{{ $currentQuestion['words'] }}</p>
+                </div>
+                @if(!$lastCorrect)
+                <p class="mt-3 text-sm {{ $lastCorrect ? 'text-emerald-100' : 'text-rose-100' }}">
+                    Your answer: <span class="font-bold line-through opacity-70">{{ $results[count($results) - 1]['user_answer'] }}</span>
                 </p>
-                <p class="mt-1 {{ $lastCorrect ? 'text-emerald-100' : 'text-rose-100' }}">Your answer: {{ $results[count($results) - 1]['user_answer'] }}</p>
+                @endif
             </div>
-            <div class="p-6">
+            <div class="p-6 space-y-4">
+                {{-- Hear the correct time spoken --}}
+                <div
+                    x-data="{
+                        phrase: '{{ addslashes($currentQuestion['words']) }}',
+                        speakAt(rate) {
+                            if (!window.speechSynthesis) return;
+                            speechSynthesis.cancel();
+                            const say = () => {
+                                const u = new SpeechSynthesisUtterance(this.phrase);
+                                u.lang = 'en-GB';
+                                u.rate = rate;
+                                speechSynthesis.speak(u);
+                            };
+                            const voices = speechSynthesis.getVoices();
+                            if (voices.length > 0) { say(); } else {
+                                speechSynthesis.addEventListener('voiceschanged', say, { once: true });
+                                setTimeout(say, 300);
+                            }
+                        }
+                    }"
+                    class="flex flex-wrap gap-3">
+                    <button
+                        x-on:click="speakAt(0.85)"
+                        class="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors border border-slate-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6v12m0 0l-3-3m3 3l3-3M6.343 6.343a8 8 0 000 11.314"/>
+                        </svg>
+                        <span>🔊 Hear answer</span>
+                    </button>
+                    <button
+                        x-on:click="speakAt(0.45)"
+                        class="inline-flex items-center space-x-2 px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors border border-slate-200">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M6.343 6.343a8 8 0 000 11.314"/>
+                        </svg>
+                        <span>🐢 Hear slowly</span>
+                    </button>
+                </div>
                 <button wire:click="proceedToNext"
                     class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-extrabold rounded-xl transition-all">
                     {{ $currentIndex + 1 >= $questionCount ? 'See Results' : 'Next Question' }}
@@ -432,47 +507,54 @@
         @if($phase === 'summary')
         @php
             $pct = $questionCount > 0 ? round(($correctCount / $questionCount) * 100) : 0;
+            [$summaryEmoji, $summaryTitle, $summaryMsg, $summaryGradient] = match(true) {
+                $pct === 100 => ['🏆', 'Perfect score!',      'Amazing — you got every single one!',        'from-yellow-400 to-amber-500'],
+                $pct >= 80   => ['🌟', 'Brilliant work!',     'You really know your clocks!',               'from-emerald-400 to-teal-500'],
+                $pct >= 60   => ['😊', 'Good effort!',        'You\'re getting there — keep practising!',   'from-blue-400 to-cyan-500'],
+                $pct >= 40   => ['💪', 'Keep going!',         'A bit more practice and you\'ll nail it!',   'from-orange-400 to-amber-500'],
+                default      => ['🤗', 'Don\'t give up!',     'Clocks are tricky — try again!',             'from-slate-500 to-slate-600'],
+            };
         @endphp
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden">
-            <div class="bg-gradient-to-r from-blue-600 to-cyan-600 px-8 py-8 text-white text-center">
-                <h2 class="text-3xl font-extrabold">Session Complete</h2>
-                <p class="text-5xl font-black mt-2">{{ $pct }}%</p>
-                <p class="text-blue-100 mt-1">{{ $correctCount }} correct out of {{ $questionCount }}</p>
+            <div class="bg-gradient-to-br {{ $summaryGradient }} px-8 py-10 text-white text-center">
+                <div class="text-7xl mb-4">{{ $summaryEmoji }}</div>
+                <h2 class="text-3xl font-extrabold mb-1">{{ $summaryTitle }}</h2>
+                <p class="text-white/80 mb-5">{{ $summaryMsg }}</p>
+                <div class="grid grid-cols-3 gap-4 max-w-sm mx-auto">
+                    <div class="bg-white/20 rounded-2xl py-4">
+                        <p class="text-3xl font-extrabold">{{ $pct }}%</p>
+                        <p class="text-xs text-white/80 font-semibold mt-0.5">Score</p>
+                    </div>
+                    <div class="bg-white/20 rounded-2xl py-4">
+                        <p class="text-3xl font-extrabold">{{ $correctCount }}</p>
+                        <p class="text-xs text-white/80 font-semibold mt-0.5">Correct</p>
+                    </div>
+                    <div class="bg-white/20 rounded-2xl py-4">
+                        <p class="text-3xl font-extrabold">{{ $wrongCount }}</p>
+                        <p class="text-xs text-white/80 font-semibold mt-0.5">Missed</p>
+                    </div>
+                </div>
+                @php $mins = intdiv($totalTimeSeconds, 60); $secs = $totalTimeSeconds % 60; @endphp
+                <p class="text-white/60 text-sm mt-4">Total time: {{ $mins > 0 ? "{$mins}m " : '' }}{{ $secs }}s</p>
             </div>
 
             <div class="p-6 sm:p-8 space-y-6">
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="text-center p-4 bg-emerald-50 rounded-xl">
-                        <p class="text-3xl font-black text-emerald-600">{{ $correctCount }}</p>
-                        <p class="text-xs font-semibold text-emerald-700">Correct</p>
-                    </div>
-                    <div class="text-center p-4 bg-rose-50 rounded-xl">
-                        <p class="text-3xl font-black text-rose-600">{{ $wrongCount }}</p>
-                        <p class="text-xs font-semibold text-rose-700">Wrong</p>
-                    </div>
-                    <div class="text-center p-4 bg-blue-50 rounded-xl">
-                        <p class="text-2xl font-black text-blue-700">
-                            @if($totalTimeSeconds >= 60)
-                                {{ floor($totalTimeSeconds / 60) }}m {{ $totalTimeSeconds % 60 }}s
-                            @else
-                                {{ $totalTimeSeconds }}s
-                            @endif
-                        </p>
-                        <p class="text-xs font-semibold text-blue-700">Total Time</p>
-                    </div>
-                </div>
-
                 <div>
                     <h3 class="font-bold text-slate-700 mb-3">Question Review</h3>
                     <div class="space-y-2 max-h-80 overflow-y-auto pr-1">
                         @foreach($results as $r)
-                        <div class="p-3 rounded-xl border {{ $r['is_correct'] ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100' }}">
-                            <div class="flex items-center justify-between">
-                                <span class="font-bold text-slate-700">{{ $this->modeLabel($r['mode']) }}</span>
-                                <span class="text-xs text-slate-400">{{ $r['time_taken'] }}s</span>
+                        <div class="flex items-start gap-3 p-3 rounded-xl border {{ $r['is_correct'] ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100' }}">
+                            <span class="text-xl mt-0.5">{{ $r['is_correct'] ? '✅' : '❌' }}</span>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between gap-2">
+                                    <span class="font-bold text-slate-700 text-sm">{{ $this->modeLabel($r['mode']) }}</span>
+                                    <span class="text-xs text-slate-400 flex-shrink-0">{{ $r['time_taken'] }}s</span>
+                                </div>
+                                <p class="text-sm font-semibold text-slate-600 mt-0.5">{{ $r['target_digital'] }} — {{ $r['target_words'] }}</p>
+                                @if(!$r['is_correct'])
+                                <p class="text-xs text-rose-600 mt-0.5">Your answer: <span class="font-bold">{{ $r['user_answer'] }}</span></p>
+                                @endif
                             </div>
-                            <p class="text-sm text-slate-600 mt-1">Target: {{ $r['target_digital'] }} ({{ $r['target_words'] }})</p>
-                            <p class="text-sm {{ $r['is_correct'] ? 'text-emerald-700' : 'text-rose-700' }}">Answer: {{ $r['user_answer'] }}</p>
                         </div>
                         @endforeach
                     </div>
@@ -481,16 +563,16 @@
                 <div class="flex flex-col sm:flex-row gap-3">
                     <button wire:click="resetGame"
                         class="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-lg rounded-xl transition-all">
-                        Play Again
+                        🔄 Play Again
                     </button>
                     <a href="{{ route('time.index') }}"
                         class="flex-1 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-lg rounded-xl transition-all text-center">
-                        Back to Time Telling
+                        ← Back
                     </a>
                     @auth
                     <a href="{{ route('progress.index') }}"
                         class="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-lg rounded-xl transition-all text-center">
-                        My Progress
+                        📊 My Progress
                     </a>
                     @endauth
                 </div>
