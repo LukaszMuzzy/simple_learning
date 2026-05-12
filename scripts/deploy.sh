@@ -165,6 +165,8 @@ fi
 
 # ── 5. Composer ───────────────────────────────────────────────────────────────
 banner "5. Installing Composer dependencies"
+info "Fixing vendor/ ownership so www can write …"
+docker compose exec -T -u root app chown -R www:www /var/www/vendor || true
 if [[ "$COMPOSER_NO_DEV" == "true" ]]; then
     docker compose exec -T app composer install \
         --no-interaction \
