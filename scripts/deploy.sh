@@ -53,7 +53,7 @@ esac
 
 # ── Source .env early so production checks can read it ───────────────────────
 _SCRIPT_DIR_EARLY="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-_PROJECT_DIR_EARLY="$(cd "$_SCRIPT_DIR_EARLY/.." && pwd)"
+_PROJECT_DIR_EARLY="$(cd "$_SCRIPT_DIR_EARLY/../src" && pwd)"
 if [[ -f "$_PROJECT_DIR_EARLY/.env" ]]; then
     set -a
     # shellcheck source=/dev/null
