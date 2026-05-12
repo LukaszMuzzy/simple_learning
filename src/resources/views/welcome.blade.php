@@ -31,6 +31,10 @@
                     class="px-8 py-4 bg-emerald-400 text-slate-900 rounded-xl font-bold text-lg hover:bg-emerald-300 transition-all duration-150 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                     📚 English Games
                 </a>
+                <a href="{{ route('time.index') }}"
+                    class="px-8 py-4 bg-sky-400 text-slate-900 rounded-xl font-bold text-lg hover:bg-sky-300 transition-all duration-150 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                    🕐 Time Telling
+                </a>
                 @guest
                 <a href="{{ route('register') }}"
                     class="px-8 py-4 bg-white/20 backdrop-blur-sm text-white rounded-xl font-bold text-lg hover:bg-white/30 transition-all duration-150 border border-white/30">
@@ -58,7 +62,7 @@
                 <h3 class="text-xl font-bold text-slate-800 mb-2">Mathematics</h3>
                 <p class="text-slate-500 mb-4">Addition, subtraction, multiplication and more!</p>
                 <div class="flex flex-wrap gap-2">
-                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">2 games</span>
+                    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">3 games</span>
                     <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">All ages</span>
                 </div>
             </a>
@@ -78,15 +82,20 @@
                 </div>
             </a>
 
-            <!-- Coming Soon -->
-            <div class="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 opacity-60 cursor-not-allowed">
-                <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-5">
-                    <span class="text-3xl">🌍</span>
+            <!-- Time Telling Card -->
+            <a href="{{ route('time.index') }}"
+                class="group bg-white rounded-2xl p-8 shadow-sm border border-slate-100 hover:shadow-lg hover:border-sky-200 transition-all duration-200 hover:-translate-y-1">
+                <div class="w-16 h-16 bg-sky-100 rounded-2xl flex items-center justify-center mb-5 group-hover:bg-sky-600 transition-colors">
+                    <span class="text-3xl">🕐</span>
                 </div>
-                <h3 class="text-xl font-bold text-slate-800 mb-2">Geography</h3>
-                <p class="text-slate-500 mb-4">Countries, capitals and more</p>
-                <span class="px-3 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-semibold">Coming Soon</span>
-            </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">Time Telling</h3>
+                <p class="text-slate-500 mb-4">Read and set analog clocks, match digital and written time!</p>
+                <div class="flex flex-wrap gap-2">
+                    <span class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-xs font-semibold">Analog &amp; Digital</span>
+                    <span class="px-3 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-semibold">🔊 Voice Mode</span>
+                    <span class="px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-semibold">KS1 &amp; KS2</span>
+                </div>
+            </a>
         </div>
     </section>
 

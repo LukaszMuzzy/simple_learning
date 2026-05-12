@@ -57,6 +57,11 @@
                                 <span class="text-xl">📚</span>
                                 <span class="font-semibold">English</span>
                             </a>
+                            <a href="{{ route('time.index') }}"
+                                class="flex items-center space-x-3 px-4 py-2.5 text-slate-700 hover:bg-sky-50 hover:text-sky-600 transition-colors">
+                                <span class="text-xl">🕐</span>
+                                <span class="font-semibold">Time Telling</span>
+                            </a>
                         </div>
                     </div>
 
@@ -145,6 +150,10 @@
                         <a href="{{ route('english.index') }}"
                             class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-700 hover:bg-emerald-50 hover:text-emerald-600 font-semibold">
                             <span>📚</span><span>English</span>
+                        </a>
+                        <a href="{{ route('time.index') }}"
+                            class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-slate-700 hover:bg-sky-50 hover:text-sky-600 font-semibold">
+                            <span>🕐</span><span>Time Telling</span>
                         </a>
                         <div class="border-t border-slate-100 my-2"></div>
                         @auth

@@ -45,6 +45,14 @@ Route::get('/english/word-definitions', function () {
     return view('english.word-definitions');
 })->name('english.word-definitions');
 
+Route::get('/time-telling', function () {
+    return view('time.index');
+})->name('time.index');
+
+Route::get('/time-telling/game', function () {
+    return view('time.game');
+})->name('time.game');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
