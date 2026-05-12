@@ -36,5 +36,6 @@
             </div>
         </div>
     </div>
+    @include('partials.cloudflare-beacon')
 </body>
 </html>

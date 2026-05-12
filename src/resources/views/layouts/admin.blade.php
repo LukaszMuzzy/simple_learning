@@ -208,5 +208,6 @@
 
     @livewireScripts
     @stack('scripts')
+    @include('partials.cloudflare-beacon')
 </body>
 </html>

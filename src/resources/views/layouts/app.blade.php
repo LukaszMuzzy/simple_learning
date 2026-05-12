@@ -216,5 +216,6 @@
     </footer>
 
     @livewireScripts
+    @include('partials.cloudflare-beacon')
 </body>
 </html>
