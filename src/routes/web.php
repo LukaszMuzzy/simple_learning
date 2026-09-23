@@ -67,17 +67,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/progress/tricky-tables/reset', [ProgressController::class, 'resetTrickyTables'])->name('progress.tricky-tables.reset');
 });
 
-// ── Admin ────────────────────────────────────────────────────────────────────
+// ── Admin (full access) ───────────────────────────────────────────────────────
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/game-links', fn () => view('admin.game-links'))->name('game-links');
 
-    // Users
+    // Users — admin only
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+    Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
     Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
     Route::delete('/users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
     Route::patch('/users/{user}/toggle-admin', [AdminUserController::class, 'toggleAdmin'])->name('users.toggle-admin');
+});
+
+// ── Admin + Teacher (shared access) ──────────────────────────────────────────
+Route::prefix('admin')->name('admin.')->middleware(['auth', 'teacher'])->group(function () {
+    Route::get('/game-links', fn () => view('admin.game-links'))->name('game-links');
 
     // Word Definitions
     Route::get('/word-definitions', [WordDefinitionController::class, 'index'])->name('word-definitions.index');

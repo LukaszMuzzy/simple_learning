@@ -18,7 +18,8 @@
                         <p class="text-slate-500 text-sm mt-0.5">Edit &#64;{{ $user->username }}'s information</p>
                     </div>
 
-                    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-6 space-y-5">
+                    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="p-6 space-y-5"
+                          x-data="{ isAdmin: {{ $user->is_admin ? 'true' : 'false' }}, isTeacher: {{ $user->is_teacher ? 'true' : 'false' }} }">
                         @csrf @method('PATCH')
 
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -61,23 +62,52 @@
                             </div>
                         </div>
 
-                        {{-- Admin toggle --}}
-                        <div class="flex items-center justify-between p-4 rounded-xl border-2 {{ $user->is_admin ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-slate-50' }}">
-                            <div>
-                                <p class="font-bold text-slate-700 text-sm">Admin Privileges</p>
-                                <p class="text-xs text-slate-500 mt-0.5">Can access this admin panel and manage all users</p>
+                        {{-- Role section --}}
+                        <div class="space-y-3">
+                            <p class="text-sm font-bold text-slate-700">Role</p>
+
+                            {{-- Teacher toggle --}}
+                            <div class="flex items-center justify-between p-4 rounded-xl border-2 transition-colors"
+                                 :class="isTeacher && !isAdmin ? 'border-emerald-300 bg-emerald-50' : 'border-slate-200 bg-slate-50'">
+                                <div>
+                                    <p class="font-bold text-slate-700 text-sm">Teacher Access</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Can manage Word Lists, Definitions &amp; Game Links</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="is_teacher" value="1" x-model="isTeacher"
+                                        :disabled="isAdmin"
+                                        {{ $user->is_teacher ? 'checked' : '' }}
+                                        class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-300 peer-checked:bg-emerald-500 peer-disabled:opacity-40 rounded-full transition-colors
+                                        after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                        after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+                                        peer-checked:after:translate-x-5"></div>
+                                </label>
                             </div>
-                            <label class="relative inline-flex items-center cursor-pointer"
-                                @if($user->id === auth()->id()) title="Cannot remove your own admin access" @endif>
-                                <input type="checkbox" name="is_admin" value="1"
-                                    {{ $user->is_admin ? 'checked' : '' }}
-                                    {{ $user->id === auth()->id() ? 'disabled' : '' }}
-                                    class="sr-only peer">
-                                <div class="w-11 h-6 bg-slate-300 peer-checked:bg-amber-400 rounded-full transition-colors
-                                    after:content-[''] after:absolute after:top-[2px] after:left-[2px]
-                                    after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
-                                    peer-checked:after:translate-x-5"></div>
-                            </label>
+
+                            {{-- Admin toggle --}}
+                            <div class="flex items-center justify-between p-4 rounded-xl border-2 transition-colors"
+                                 :class="isAdmin ? 'border-amber-300 bg-amber-50' : 'border-slate-200 bg-slate-50'">
+                                <div>
+                                    <p class="font-bold text-slate-700 text-sm">Admin Privileges</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Full access — manages users, all content &amp; settings</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer"
+                                    @if($user->id === auth()->id()) title="Cannot remove your own admin access" @endif>
+                                    <input type="checkbox" name="is_admin" value="1" x-model="isAdmin"
+                                        {{ $user->is_admin ? 'checked' : '' }}
+                                        {{ $user->id === auth()->id() ? 'disabled' : '' }}
+                                        @change="if (isAdmin) isTeacher = false"
+                                        class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-300 peer-checked:bg-amber-400 peer-disabled:opacity-40 rounded-full transition-colors
+                                        after:content-[''] after:absolute after:top-[2px] after:left-[2px]
+                                        after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all
+                                        peer-checked:after:translate-x-5"></div>
+                                </label>
+                            </div>
+                            <p class="text-xs text-slate-400 font-semibold px-1" x-show="isAdmin">
+                                Admin role supersedes Teacher — Teacher toggle is disabled while Admin is on.
+                            </p>
                         </div>
 
                         <div class="flex items-center justify-between pt-2">

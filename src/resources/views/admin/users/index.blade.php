@@ -16,6 +16,7 @@
                 class="border border-slate-200 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 focus:ring-2 focus:ring-indigo-400 outline-none bg-white">
                 <option value="" {{ !request('filter') ? 'selected' : '' }}>All users</option>
                 <option value="admins" {{ request('filter') === 'admins' ? 'selected' : '' }}>Admins only</option>
+                <option value="teachers" {{ request('filter') === 'teachers' ? 'selected' : '' }}>Teachers only</option>
             </select>
             <button type="submit" class="px-4 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors">
                 Search
@@ -27,9 +28,18 @@
             @endif
         </form>
 
-        <p class="text-sm text-slate-500 font-semibold flex-shrink-0">
-            {{ $users->total() }} {{ Str::plural('user', $users->total()) }}
-        </p>
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <p class="text-sm text-slate-500 font-semibold">
+                {{ $users->total() }} {{ Str::plural('user', $users->total()) }}
+            </p>
+            <a href="{{ route('admin.users.create') }}"
+                class="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition-colors shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                Invite User
+            </a>
+        </div>
     </div>
 
     {{-- Table --}}
@@ -52,7 +62,7 @@
                         <td class="px-6 py-4">
                             <div class="flex items-center space-x-3">
                                 <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0
-                                    {{ $user->is_admin ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-600' }}">
+                                    {{ $user->is_admin ? 'bg-amber-100 text-amber-700' : ($user->is_teacher ? 'bg-emerald-100 text-emerald-700' : 'bg-indigo-100 text-indigo-600') }}">
                                     {{ strtoupper(substr($user->name, 0, 1)) }}
                                 </div>
                                 <div>
@@ -68,6 +78,10 @@
                             @if($user->is_admin)
                                 <span class="inline-flex items-center px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
                                     ⭐ Admin
+                                </span>
+                            @elseif($user->is_teacher)
+                                <span class="inline-flex items-center px-2.5 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+                                    🎓 Teacher
                                 </span>
                             @else
                                 <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full text-xs font-semibold">
@@ -111,7 +125,7 @@
                                 @if($user->id !== auth()->id())
                                 <form method="POST" action="{{ route('admin.users.destroy', $user) }}"
                                     x-data
-                                    @submit.prevent="if(confirm('Delete {{ $user->username }}? This will also delete all their game history.')) $el.submit()"
+                                    @submit.prevent="if(confirm('Delete {{ $user->username }}? This will also delete all their game history.')) $el.submit()">
                                     @csrf @method('DELETE')
                                     <button type="submit"
                                         class="p-2 rounded-lg text-red-400 hover:bg-red-50 transition-colors" title="Delete">

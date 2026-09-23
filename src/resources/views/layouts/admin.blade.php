@@ -49,6 +49,8 @@
             <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
                 <p class="text-xs font-bold text-slate-500 uppercase tracking-widest px-3 mb-3">Menu</p>
 
+                {{-- Dashboard — admin only --}}
+                @if(Auth::user()->is_admin)
                 <a href="{{ route('admin.dashboard') }}"
                     class="flex items-center space-x-3 px-3 py-2.5 rounded-xl font-semibold transition-colors
                         {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -58,7 +60,10 @@
                     </svg>
                     <span>Dashboard</span>
                 </a>
+                @endif
 
+                {{-- Users — admin only --}}
+                @if(Auth::user()->is_admin)
                 <a href="{{ route('admin.users.index') }}"
                     class="flex items-center space-x-3 px-3 py-2.5 rounded-xl font-semibold transition-colors
                         {{ request()->routeIs('admin.users.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -68,7 +73,9 @@
                     </svg>
                     <span>Users</span>
                 </a>
+                @endif
 
+                {{-- Word Lists — admin + teacher --}}
                 <a href="{{ route('admin.word-lists.index') }}"
                     class="flex items-center space-x-3 px-3 py-2.5 rounded-xl font-semibold transition-colors
                         {{ request()->routeIs('admin.word-lists.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -79,6 +86,7 @@
                     <span>Word Lists</span>
                 </a>
 
+                {{-- Word Definitions — admin + teacher --}}
                 <a href="{{ route('admin.word-definitions.index') }}"
                     class="flex items-center space-x-3 px-3 py-2.5 rounded-xl font-semibold transition-colors
                         {{ request()->routeIs('admin.word-definitions.*') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -89,6 +97,7 @@
                     <span>Word Definitions</span>
                 </a>
 
+                {{-- Definition Groups — admin + teacher --}}
                 <a href="{{ route('admin.definition-groups.index') }}"
                     class="flex items-center space-x-3 pl-10 pr-3 py-2 rounded-xl font-semibold transition-colors text-sm
                         {{ request()->routeIs('admin.definition-groups.*') ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white' }}">
@@ -99,6 +108,7 @@
                     <span>Definition Groups</span>
                 </a>
 
+                {{-- Game Links — admin + teacher --}}
                 <a href="{{ route('admin.game-links') }}"
                     class="flex items-center space-x-3 px-3 py-2.5 rounded-xl font-semibold transition-colors
                         {{ request()->routeIs('admin.game-links') ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800 hover:text-white' }}">
@@ -164,9 +174,15 @@
                 </div>
 
                 <div class="flex items-center space-x-2">
-                    <span class="hidden sm:inline px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold">
+                    @if(Auth::user()->is_admin)
+                    <span class="hidden sm:inline px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold">
                         Admin
                     </span>
+                    @else
+                    <span class="hidden sm:inline px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-bold">
+                        Teacher
+                    </span>
+                    @endif
                     <span class="text-sm font-semibold text-slate-600 hidden sm:inline">{{ Auth::user()->name }}</span>
                 </div>
             </header>
