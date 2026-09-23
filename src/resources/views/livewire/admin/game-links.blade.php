@@ -82,12 +82,42 @@
         @if($selectedGame === 'multiplication')
         <div class="space-y-5">
 
+            <div @class([
+                'border-2 rounded-xl p-4 transition-all',
+                'border-amber-400 bg-amber-50' => $this->isMultYear4Exam(),
+                'border-slate-200 bg-slate-50' => !$this->isMultYear4Exam(),
+            ])>
+                <button wire:click="toggleMultYear4Exam" type="button"
+                    class="flex items-center justify-between w-full text-left">
+                    <div>
+                        <p @class(['font-bold', 'text-amber-800' => $this->isMultYear4Exam(), 'text-slate-700' => !$this->isMultYear4Exam()])>
+                            Year 4 Exam
+                            @if($this->isMultYear4Exam())
+                            <span class="ml-2 px-2 py-0.5 bg-amber-500 text-white text-xs rounded-full">ON</span>
+                            @endif
+                        </p>
+                        <p class="text-xs text-slate-500">12 questions · 6s each · Exam mode</p>
+                    </div>
+                    <div @class([
+                        'relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200',
+                        'bg-amber-500' => $this->isMultYear4Exam(),
+                        'bg-slate-300' => !$this->isMultYear4Exam(),
+                    ])>
+                        <span @class([
+                            'inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200',
+                            'translate-x-6' => $this->isMultYear4Exam(),
+                            'translate-x-1' => !$this->isMultYear4Exam(),
+                        ])></span>
+                    </div>
+                </button>
+            </div>
+
             <div>
                 <label class="block text-sm font-bold text-slate-700 mb-2">
                     Number of Questions: <span class="text-green-600">{{ $mult_questionCount }}</span>
                 </label>
                 <div class="flex flex-wrap gap-2">
-                    @foreach([5, 10, 15, 20, 30, 50] as $n)
+                    @foreach([5, 10, 12, 15, 20, 30, 50] as $n)
                     <button wire:click="$set('mult_questionCount', {{ $n }})"
                         @class(['px-4 py-2 rounded-lg border-2 font-bold text-sm transition-all',
                             'border-green-500 bg-green-600 text-white' => $mult_questionCount === $n,

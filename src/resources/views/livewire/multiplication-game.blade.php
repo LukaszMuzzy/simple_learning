@@ -9,13 +9,45 @@
 
         <div class="p-6 sm:p-8 space-y-7">
 
+            {{-- Year 4 Exam preset --}}
+            <div class="border-2 rounded-xl transition-all duration-150
+                        {{ $this->isYear4ExamPreset() ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-slate-50' }}">
+                <button wire:click="toggleYear4Exam" type="button"
+                    class="flex items-center justify-between w-full p-4 text-left">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-lg {{ $this->isYear4ExamPreset() ? 'bg-amber-500' : 'bg-slate-300' }} flex items-center justify-center flex-shrink-0 transition-colors">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="font-bold {{ $this->isYear4ExamPreset() ? 'text-amber-800' : 'text-slate-700' }}">
+                                Year 4 Exam
+                                @if($this->isYear4ExamPreset())
+                                <span class="ml-2 px-2 py-0.5 bg-amber-500 text-white text-xs rounded-full">ON</span>
+                                @endif
+                            </p>
+                            <p class="text-xs text-slate-500">12 questions · 6 seconds each · Exam mode (no feedback until the end)</p>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0 ml-4">
+                        <div class="relative inline-flex h-7 w-12 items-center rounded-full transition-colors duration-200
+                                    {{ $this->isYear4ExamPreset() ? 'bg-amber-500' : 'bg-slate-300' }}">
+                            <span class="inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200
+                                         {{ $this->isYear4ExamPreset() ? 'translate-x-6' : 'translate-x-1' }}"></span>
+                        </div>
+                    </div>
+                </button>
+            </div>
+
             {{-- Number of questions --}}
             <div>
                 <label class="block text-sm font-bold text-slate-700 mb-3">
                     Number of Questions: <span class="text-green-600">{{ $questionCount }}</span>
                 </label>
                 <div class="flex flex-wrap gap-2 mb-3">
-                    @foreach([5, 10, 15, 20, 30, 50] as $n)
+                    @foreach([5, 10, 12, 15, 20, 30, 50] as $n)
                     <button wire:click="setQuestionCount({{ $n }})"
                         class="px-4 py-2 rounded-lg border-2 font-bold text-sm transition-all duration-150
                                {{ $questionCount === $n
@@ -42,7 +74,7 @@
                 </label>
                 <div class="flex flex-wrap gap-2">
                     @foreach([[0, '∞ No Limit'], [6, '6s'], [10, '10s'], [15, '15s'], [30, '30s'], [60, '60s']] as [$t, $label])
-                    <button wire:click="$set('timePerQuestion', {{ $t }})"
+                    <button wire:click="setTimePerQuestion({{ $t }})"
                         class="px-4 py-2 rounded-lg border-2 font-bold text-sm transition-all duration-150
                                {{ $timePerQuestion === $t
                                   ? 'border-green-500 bg-green-600 text-white'

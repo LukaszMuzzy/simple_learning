@@ -86,6 +86,35 @@ class MultiplicationGame extends Component
                 sort($this->selectedNumbers);
             }
         }
+
+        // Year 4 Exam preset: 12 questions, 6s each, exam mode
+        if (!empty($q['year4'])) {
+            $this->applyYear4Exam();
+        }
+    }
+
+    public function isYear4ExamPreset(): bool
+    {
+        return $this->examMode
+            && $this->questionCount === 12
+            && $this->timePerQuestion === 6;
+    }
+
+    public function applyYear4Exam(): void
+    {
+        $this->examMode = true;
+        $this->setQuestionCount(12);
+        $this->timePerQuestion = 6;
+    }
+
+    public function toggleYear4Exam(): void
+    {
+        if ($this->isYear4ExamPreset()) {
+            $this->examMode = false;
+            return;
+        }
+
+        $this->applyYear4Exam();
     }
 
     public function setQuestionCount(int $n): void
@@ -343,6 +372,11 @@ class MultiplicationGame extends Component
     public function toggleExamMode(): void
     {
         $this->examMode = !$this->examMode;
+    }
+
+    public function setTimePerQuestion(int $seconds): void
+    {
+        $this->timePerQuestion = max(0, $seconds);
     }
 
     public function resetGame(): void

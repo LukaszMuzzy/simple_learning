@@ -71,6 +71,25 @@ class GameLinks extends Component
         }
     }
 
+    public function isMultYear4Exam(): bool
+    {
+        return $this->mult_examMode
+            && $this->mult_questionCount === 12
+            && $this->mult_timePerQuestion === 6;
+    }
+
+    public function toggleMultYear4Exam(): void
+    {
+        if ($this->isMultYear4Exam()) {
+            $this->mult_examMode = false;
+            return;
+        }
+
+        $this->mult_examMode = true;
+        $this->mult_questionCount = 12;
+        $this->mult_timePerQuestion = 6;
+    }
+
     public function toggleTimePrecision(string $precision): void
     {
         if (in_array($precision, $this->time_selectedPrecisions, true)) {
@@ -232,6 +251,7 @@ class GameLinks extends Component
             $parts[] = 'Game timer: ' . ($m > 0 ? "{$m}m" : '') . ($s > 0 ? "{$s}s" : '');
         }
         if ($this->mult_examMode) $parts[] = 'Exam mode';
+        if ($this->isMultYear4Exam()) $parts[] = 'Year 4 Exam';
         return implode(' · ', $parts);
     }
 
